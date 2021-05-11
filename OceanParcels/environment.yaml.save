@@ -34,6 +34,6 @@ dependencies:
   - scipy
   - xarray
   - ffmpeg
-  #- salishsea_tools
+  - salishsea_tools
   - IPython
   - cartopy
