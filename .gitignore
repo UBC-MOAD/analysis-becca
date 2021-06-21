@@ -144,8 +144,10 @@ cython_debug/
 *.pptx
 *.nc
 *.npy
+*.txt
+*.sav
 
 #don't want any of the Ocean Parcels Results files (bot temp and final) uploaded
-out-*
+out*
 becca_drifters*
 
