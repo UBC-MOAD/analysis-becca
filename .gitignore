@@ -151,3 +151,5 @@ cython_debug/
 out*
 becca_drifters*
 
+#don't need my notebook for testing the run ariane stuff on github
+LinksTesting.ipynb
