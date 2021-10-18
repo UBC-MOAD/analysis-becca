@@ -1,0 +1,39 @@
+# conda environment description file for the analysis-becca environment
+#
+# Create a conda environment in which to run Jupyter Notebooks in this directory with:
+#
+#   $ conda env create -f mapping.yaml
+#   $ conda activate mapping
+#
+# To add new packages to the environment,
+# add them to the dependencies list below,
+# then update the activated environment with:
+#
+#   (analysis-becca)$ conda env update -f mapping.yaml
+
+name: mapping
+
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - bottleneck
+  - cmocean
+  - jupyterlab
+  - matplotlib
+  - netCDF4
+  - numpy
+  - pandas
+  - proj
+  - geos
+  - pip
+  - python=3
+  - scipy
+  - xarray
+  #- salishsea_tools
+  - IPython
+  - cartopy
+  - matplotlib
+#  - mpl_toolkits
+#  - LambertConformalTicks
