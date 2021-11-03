@@ -4,47 +4,40 @@
 # # Adding Back the Tides
 # An effort to make the daily files more accurate as they are currently lacking the tidal pumping that is so important to the flow of the Salish Sea
 
-# In[1]:
-
-
 import xarray as xr
 from pathlib import Path
 import numpy as np
 import datetime as dt
 
+# start_day, end_day = 1, 30 #start day always 1, end day = the number of days you are running for (ex. 60 for monthly runs)
+# days = range(start_day, end_day+1)
 
-# In[2]:
+start = dt.datetime(2019,2,28) #start day of your run
+split = dt.datetime(2019,6,1) #between where 201812 files are in one file or the other
 
-
-start_day, end_day = 1, 5
-days = range(start_day, end_day+1)
-
-start = dt.datetime(2019,3,1)
-split = dt.datetime(2019,6,1)
-
+# dates for each run
+numdays = 2 #16 for the first and last 2 weeks and 15 for the rest
+date_list = [start + dt.timedelta(days=x) for x in range(numdays)]
 
 # In[3]:
-
 
 if start >= split:
     path = Path("/results2/SalishSea/nowcast-green.201812/")
 else:
     path = Path("/results/SalishSea/nowcast-green.201812/")
 
+#load e3t
 drop_vars = (
     "bounds_lon", "bounds_lat", "area", "deptht_bounds", "PAR",
     "time_centered", "time_centered_bounds", "time_counter_bounds", "dissolved_oxygen",
     "sigma_theta", "Fraser_tracer", "dissolved_inorganic_carbon", "total_alkalnity",
 )
 
-files = [sorted(path.glob("{:02}mar19/SalishSea_1h_*_carp_T.nc".format(day))) for day in days]
+files = [sorted(path.glob("{:%d%b%y}".format(day).lower()+"/SalishSea_1h_*_carp_T.nc")) for day in date_list]
+# files = [sorted(path.glob("{:02}mar19/SalishSea_1h_*_carp_T.nc".format(day))) for day in days]
 
 mydata = xr.open_mfdataset(files, drop_variables=drop_vars)
 e3t = mydata['e3t']
-
-
-# In[4]:
-
 
 # convert e3t to e3u and to e3v
 e3t_xshift = e3t.shift(x=-1,fill_value=0)
@@ -58,74 +51,52 @@ e3v = e3v*0.5
 e3v = e3v.rename({'deptht': 'depthv'})
 
 
-# In[5]:
-
-
+# load u data
 drop_vars = (
     "nav_lon", "bounds_lon", "nav_lat", "bounds_lat", "area", "depthu_bounds", 
     "time_centered", "time_centered_bounds", "time_counter_bounds",
 )
 
-files = [sorted(path.glob("{:02}mar19/SalishSea_1h_*_grid_U.nc".format(day))) for day in days]
+files = [sorted(path.glob("{:%d%b%y}".format(day).lower()+"/SalishSea_1h_*_grid_U.nc")) for day in date_list]
+# files = [sorted(path.glob("{:02}mar19/SalishSea_1h_*_grid_U.nc".format(day))) for day in days]
 
 mydata = xr.open_mfdataset(files, drop_variables=drop_vars)
 u = mydata['vozocrtx']
 
 
-# In[6]:
-
-
+# load v
 drop_vars = (
     "nav_lon", "bounds_lon", "nav_lat", "bounds_lat", "area", "depthv_bounds", 
     "time_centered", "time_centered_bounds", "time_counter_bounds",
 )
 
-files = [sorted(path.glob("{:02}mar19/SalishSea_1h_*_grid_V.nc".format(day))) for day in days]
+files = [sorted(path.glob("{:%d%b%y}".format(day).lower()+"/SalishSea_1h_*_grid_V.nc")) for day in date_list]
+# files = [sorted(path.glob("{:02}mar19/SalishSea_1h_*_grid_V.nc".format(day))) for day in days]
 
 mydata = xr.open_mfdataset(files, drop_variables=drop_vars)
 v = mydata['vomecrty']
 
-
-# In[7]:
-
-
 #calcuate bartropic component of u
 ut_h = (u*e3u).sum(dim='depthu')/e3u.sum(dim='depthu')
-
-
-# In[8]:
-
 
 #calcuate bartropic component of v
 vt_h = (v*e3v).sum(dim='depthv')/e3v.sum(dim='depthv')
 
 
 # u, v, and e3* get reused bellow, so to be safe force the loading of ut_h and vt_h
-
-# In[9]:
-
-
-# n=4
 # ut_h.load()
-
-
-# In[ ]:
-
-
 # vt_h.load()
 
-
-# In[9]:
-
-
 # Now get the required data from the daily files
+# for these you must add an extra day at the front and the back so that when the interpolation happens we have the correct number of hours
 drop_vars = (
     "nav_lon", "bounds_lon", "nav_lat", "bounds_lat", "area", "deptht_bounds", "PAR",
     "time_centered", "time_centered_bounds", "time_counter_bounds", "dissolved_oxygen",
     "sigma_theta", "Fraser_tracer", "dissolved_inorganic_carbon", "total_alkalnity",
 )
 
-files = [sorted(path.glob("{:02}mar19/SalishSea_1d_*_carp_T.nc".format(day))) for day in days]
+files = [sorted(path.glob("{:%d%b%y}".format(day).lower()+"/SalishSea_1d_*_carp_T.nc")) for day in date_list]
+# files = [sorted(path.glob("{:02}mar19/SalishSea_1d_*_carp_T.nc".format(day))) for day in days]
 
 mydata = xr.open_mfdataset(files, drop_variables=drop_vars)
 e3t_d = mydata['e3t']
@@ -135,7 +106,8 @@ drop_vars = (
     "time_centered", "time_centered_bounds", "time_counter_bounds",
 )
 
-files = [sorted(path.glob("{:02}mar19/SalishSea_1d_*_grid_U.nc".format(day))) for day in days]
+files = [sorted(path.glob("{:%d%b%y}".format(day).lower()+"/SalishSea_1d_*_grid_U.nc")) for day in date_list]
+# files = [sorted(path.glob("{:02}mar19/SalishSea_1d_*_grid_U.nc".format(day))) for day in days]
 
 mydata = xr.open_mfdataset(files, drop_variables=drop_vars)
 u_d = mydata['vozocrtx']
@@ -145,14 +117,11 @@ drop_vars = (
     "time_centered", "time_centered_bounds", "time_counter_bounds",
 )
 
-files = [sorted(path.glob("{:02}mar19/SalishSea_1d_*_grid_V.nc".format(day))) for day in days]
+files = [sorted(path.glob("{:%d%b%y}".format(day).lower()+"/SalishSea_1d_*_grid_V.nc")) for day in date_list]
+# files = [sorted(path.glob("{:02}mar19/SalishSea_1d_*_grid_V.nc".format(day))) for day in days]
 
 mydata = xr.open_mfdataset(files, drop_variables=drop_vars)
 v_d = mydata['vomecrty']
-
-
-# In[10]:
-
 
 # convert e3t to e3u and to e3v
 e3t_xshift = e3t_d.shift(x=-1,fill_value=0)
@@ -165,81 +134,39 @@ e3v_d = e3t_yshift+e3t_d
 e3v_d = e3v_d*0.5
 e3v_d = e3v_d.rename({'deptht': 'depthv'})
 
-
-# In[11]:
-
-
 #calcuate bartropic component
 ut_d = (u_d*e3u_d).sum(dim='depthu')/e3u_d.sum(dim='depthu')
-
-
-# In[12]:
-
 
 #subtract from u to get baroclinic component
 uc_d = u_d-ut_d #does this work even though their ut_d lacks the depth dimension?
 
 
-# In[30]:
-
-
-# uc_d.load(scheduler="processes", num_workers=n)
-
-
 # interpolate + resample uc_d to get it in an hourly format
-
-# In[ ]:
-
-
 uc_h_interp = uc_d.resample(time_counter="1H", loffset="30min").interpolate("linear")
+# the interp value should have extra hours BUT when you add together in the next step xarray will just be so nice to you and align the two for the corect hours!
 
-
-# In[ ]:
-
-
+# added together this should give your final u!!!!!
 u_new = ut_h  + uc_h_interp
 
-
-# In[ ]:
-
-
+# And save!
 # np.save("u_new.npy",u_new)
+path = '/data/rbeutel/analysis/ssc_tidesback/'
+u_new.to_netcdf(str(path)+'u_new_{:%d%b%y}_{:%d%b%y}'.format(date_list[0],date_list[-1]))
 
-
-# In[ ]:
-
+# Now for V
 
 #calcuate bartropic component
 vt_d = (v_d*e3v_d).sum(dim='depthv')/e3v_d.sum(dim='depthv')
 
 
-# In[ ]:
-
-
 #subtract from v to get baroclinic component
 vc_d = v_d-vt_d 
 
-
-# In[ ]:
-
-
 # vc_d.load(scheduler="processes", num_workers=n)
-
-
-# In[ ]:
-
 
 vc_h_interp = vc_d.resample(time_counter="1H", loffset="30min").interpolate("linear")
 
-
-# In[ ]:
-
-
 v_new = vt_h  + vc_h_interp
 
-
-# In[ ]:
-
-
-np.save("v_new.npy",v_new)
-
+# np.save("v_new.npy",v_new)
+v_new.to_netcdf(str(path)+'v_new_{:%d%b%y}_{:%d%b%y}'.format(date_list[0],date_list[-1]))
