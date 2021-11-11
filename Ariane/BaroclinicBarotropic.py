@@ -12,11 +12,11 @@ import datetime as dt
 # start_day, end_day = 1, 30 #start day always 1, end day = the number of days you are running for (ex. 60 for monthly runs)
 # days = range(start_day, end_day+1)
 
-start = dt.datetime(2019,2,28) #start day of your run
+start = dt.datetime(2019,4,14) #start day of your run
 split = dt.datetime(2019,6,1) #between where 201812 files are in one file or the other
 
 # dates for each run
-numdays = 2 #16 for the first and last 2 weeks and 15 for the rest
+numdays = 17 #16 for the first and last 2 weeks and 15 for the rest
 date_list = [start + dt.timedelta(days=x) for x in range(numdays)]
 
 # In[3]:
