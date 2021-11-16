@@ -12,11 +12,11 @@ import datetime as dt
 # start_day, end_day = 1, 30 #start day always 1, end day = the number of days you are running for (ex. 60 for monthly runs)
 # days = range(start_day, end_day+1)
 
-start = dt.datetime(2019,4,14) #start day of your run
+start = dt.datetime(2019,10,15) #start day of your run
 split = dt.datetime(2019,6,1) #between where 201812 files are in one file or the other
 
 # dates for each run
-numdays = 17 #16 for the first and last 2 weeks and 15 for the rest
+numdays = 17 #16 for all except the last run
 date_list = [start + dt.timedelta(days=x) for x in range(numdays)]
 
 # In[3]:
@@ -151,7 +151,7 @@ u_new = ut_h  + uc_h_interp
 # And save!
 # np.save("u_new.npy",u_new)
 path = '/data/rbeutel/analysis/ssc_tidesback/'
-u_new.to_netcdf(str(path)+'u_new_{:%d%b%y}_{:%d%b%y}'.format(date_list[0],date_list[-1]))
+u_new.to_netcdf(str(path)+'u_new_{:%d%b%y}_{:%d%b%y}.nc'.format(date_list[0],date_list[-1]))
 
 # Now for V
 
@@ -169,4 +169,4 @@ vc_h_interp = vc_d.resample(time_counter="1H", loffset="30min").interpolate("lin
 v_new = vt_h  + vc_h_interp
 
 # np.save("v_new.npy",v_new)
-v_new.to_netcdf(str(path)+'v_new_{:%d%b%y}_{:%d%b%y}'.format(date_list[0],date_list[-1]))
+v_new.to_netcdf(str(path)+'v_new_{:%d%b%y}_{:%d%b%y}.nc'.format(date_list[0],date_list[-1]))
