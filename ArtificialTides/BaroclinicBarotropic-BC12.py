@@ -6,23 +6,16 @@ from pathlib import Path
 import numpy as np
 import datetime as dt
 
-startday = [dt.datetime(2015,11,22)+dt.timedelta(days=14*i) for i in range(int(214))]
+startday = [dt.datetime(2016,11,22)+dt.timedelta(days=i) for i in range(int(1498))]
+folders = [dt.datetime(2015,11,29)+dt.timedelta(days=7*i) for i in range(int(214))]
+folders = np.repeat(folders,7)
 
-for start in startday:
-# all within a for loop so you dont have to restart the code every 2 weeks for 4 years
+for i in range(131,len(startday)-1):
+# all within a for loop so you dont have to restart the code every day for 4 years
 
     # dates for each run
-    if start < dt.datetime(2019,12,15):
-        numdays = 8 #8 for all except the last run (7)
-        date_list = [start + dt.timedelta(days=x) for x in range(numdays)]
-        folderday = [start+ dt.timedelta(days=7),start+ dt.timedelta(days=7*2)]#,start+ dt.timedelta(days=7*2)]
-        folderday = np.repeat(folderday,7)
-        folderday = folderday[:-6]
-    else:
-        numdays = 7
-        date_list = [start + dt.timedelta(days=x) for x in range(numdays)]
-        folderday = [start+ dt.timedelta(days=7)]#,start+ dt.timedelta(days=7*2)]
-        folderday = np.repeat(folderday,7)
+    date_list = [startday[i],startday[i+1]]
+    folderday = [folders[i], folders[i+1]]
 
     # In[3]:
     #load U
@@ -100,12 +93,14 @@ for start in startday:
 
     # added together this should give your final u!!!!!
     u_new = ut_h  + uc_h_interp
+    u_new = u_new.isel(time_counter = np.arange(0,24,1)) #remove extra hour 
+    u_new = u_new.rename('vozocrtx') #name it what you want it named in final netcdf
 
     # And save!
     # np.save("u_new.npy",u_new)
     path = '/data/rbeutel/analysis/BC12_tidesback/'
-    u_new.to_netcdf(str(path)+'u_new_{:%d%b%y}_{:%d%b%y}.nc'.format(date_list[0],date_list[-1]))
-    print('u_new_{:%d%b%y}_{:%d%b%y}.nc complete'.format(date_list[0],date_list[-1]))
+    u_new.to_netcdf(str(path)+'U_new_{:%Y%m%d}.nc'.format(date_list[0]))
+#     print('u_new_{:%d%b%y}_{:%d%b%y}.nc complete'.format(date_list[0],date_list[-1]))
     # Now for V
 
     #calcuate bartropic component
@@ -123,7 +118,9 @@ for start in startday:
     #instead of taking 12hours off each side like when done with SSC, this method takes off 24hours on the end!
 
     v_new = vt_h  + vc_h_interp
+    v_new = v_new.isel(time_counter = np.arange(0,24,1)) #remove extra hour 
+    v_new = v_new.rename('vomecrty') #name it what you want it named in final netcdf
 
     # np.save("v_new.npy",v_new)
-    v_new.to_netcdf(str(path)+'v_new_{:%d%b%y}_{:%d%b%y}.nc'.format(date_list[0],date_list[-1]))
-    print('v_new_{:%d%b%y}_{:%d%b%y}.nc complete'.format(date_list[0],date_list[-1]))
+    v_new.to_netcdf(str(path)+'V_new_{:%Y%m%d}.nc'.format(date_list[0]))
+#     print('v_new_{:%d%b%y}_{:%d%b%y}.nc complete'.format(date_list[0],date_list[-1]))
