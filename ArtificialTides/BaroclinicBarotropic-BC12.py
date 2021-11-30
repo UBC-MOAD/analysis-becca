@@ -6,16 +6,36 @@ from pathlib import Path
 import numpy as np
 import datetime as dt
 
-startday = [dt.datetime(2016,11,22)+dt.timedelta(days=i) for i in range(int(1498))]
+# Outside of loop: we WILL need to do some conversions here, so get e3t from the mesh_mask file
+mydata = xr.open_dataset("/ocean/mdunphy/CIOPSW-BC12/grid/mesh_mask_Bathymetry_NEP36_714x1020_SRTM30v11_NOAA3sec_WCTSS_JdeFSalSea.nc")
+e3t = mydata['e3t_0']
+
+    # convert e3t to e3u and to e3v
+e3t_xshift = e3t.shift(x=-1,fill_value=0)
+e3u = e3t_xshift+e3t
+e3u = e3u*0.5
+e3u = e3u.rename({'z': 'depthu'})
+
+e3t_yshift = e3t.shift(y=-1,fill_value=0)
+e3v = e3t_yshift+e3t
+e3v = e3v*0.5
+e3v = e3v.rename({'z': 'depthv'})
+
+# set runing dates:
+startday = [dt.datetime(2015,11,22)+dt.timedelta(days=i) for i in range(int(1498))]
+# print(len(startday))
 folders = [dt.datetime(2015,11,29)+dt.timedelta(days=7*i) for i in range(int(214))]
 folders = np.repeat(folders,7)
+# print(len(folders))
 
 for i in range(131,len(startday)-1):
 # all within a for loop so you dont have to restart the code every day for 4 years
 
     # dates for each run
     date_list = [startday[i],startday[i+1]]
+#     print(str(date_list))
     folderday = [folders[i], folders[i+1]]
+#     print(str(folderday))
 
     # In[3]:
     #load U
@@ -64,21 +84,6 @@ for i in range(131,len(startday)-1):
     mydata = xr.open_mfdataset(files, drop_variables=drop_vars)
     v_d = mydata['vo']
 
-    # we WILL need to do some conversions here, so get e3t from the mesh_mask file
-    mydata = xr.open_dataset("/ocean/mdunphy/CIOPSW-BC12/grid/mesh_mask_Bathymetry_NEP36_714x1020_SRTM30v11_NOAA3sec_WCTSS_JdeFSalSea.nc")
-    e3t = mydata['e3t_0']
-
-    # convert e3t to e3u and to e3v
-    e3t_xshift = e3t.shift(x=-1,fill_value=0)
-    e3u = e3t_xshift+e3t
-    e3u = e3u*0.5
-    e3u = e3u.rename({'z': 'depthu'})
-
-    e3t_yshift = e3t.shift(y=-1,fill_value=0)
-    e3v = e3t_yshift+e3t
-    e3v = e3v*0.5
-    e3v = e3v.rename({'z': 'depthv'})
-
     #calcuate barotropic component
     ut_d = (u_d*e3u[0,:,:,:]).sum(dim='depthu')/e3u[0,:,:,:].sum(dim='depthu')
 
@@ -98,8 +103,8 @@ for i in range(131,len(startday)-1):
 
     # And save!
     # np.save("u_new.npy",u_new)
-    path = '/data/rbeutel/analysis/BC12_tidesback/'
-    u_new.to_netcdf(str(path)+'U_new_{:%Y%m%d}.nc'.format(date_list[0]))
+    path = '/ocean/rbeutel/data/'
+    u_new.to_netcdf(str(path)+'{:%Y%m}/U_new_{:%Y%m%d}.nc'.format(date_list[0],date_list[0]))
 #     print('u_new_{:%d%b%y}_{:%d%b%y}.nc complete'.format(date_list[0],date_list[-1]))
     # Now for V
 
@@ -122,5 +127,5 @@ for i in range(131,len(startday)-1):
     v_new = v_new.rename('vomecrty') #name it what you want it named in final netcdf
 
     # np.save("v_new.npy",v_new)
-    v_new.to_netcdf(str(path)+'V_new_{:%Y%m%d}.nc'.format(date_list[0]))
+    v_new.to_netcdf(str(path)+'{:%Y%m}/V_new_{:%Y%m%d}.nc'.format(date_list[0],date_list[0]))
 #     print('v_new_{:%d%b%y}_{:%d%b%y}.nc complete'.format(date_list[0],date_list[-1]))
