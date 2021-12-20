@@ -7,13 +7,11 @@ import datetime as dt
 import gsw
 
 # set runing dates:
-startday = [dt.datetime(2015,11,22)+dt.timedelta(days=i) for i in range(int(1498))]
-# print(len(startday))
-folders = [dt.datetime(2015,11,29)+dt.timedelta(days=7*i) for i in range(int(214))]
+startday = [dt.datetime(2017,12,31)+dt.timedelta(days=i) for i in range(int(399))]
+folders = [dt.datetime(2017,12,31)+dt.timedelta(days=7*(i+1)) for i in range(int(57))]
 folders = np.repeat(folders,7)
-# print(len(folders))
 
-for i in range(866,len(startday)-1):
+for i in range(len(startday)-1):
 # all within a for loop so you dont have to restart the code every day for 4 years
 
     # dates for each run
@@ -33,15 +31,18 @@ for i in range(866,len(startday)-1):
     mydata = xr.open_mfdataset(files, drop_variables=drop_vars)
     sal = mydata['so']
     potT = mydata['thetao']
+    
+    # replace all land values with nan so that math isn't done on them
+    sal = sal.where(sal != 0)
+    potT = potT.where(potT != 0)
 
     #convert potential temp to in-situ temp using gws toolbox
     CT = gsw.CT_from_pt(sal,potT)
     T = gsw.t_from_CT(sal,CT,potT.deptht)
-    T = T.where(T>1,0) #the conversions mess with all the land values, convert these back to 0.. the region doesnt go lower than 1 so this is fine
 
     # interpolate + resample uc_d to get it in an hourly format
-    sal_interp = sal.resample(time_counter="1H", loffset=dt.timedelta(hours=-23)).interpolate("linear")
-    T_interp = T.resample(time_counter="1H", loffset=dt.timedelta(hours=-23)).interpolate("linear")
+    sal_interp = sal.resample(time_counter="1H", loffset=dt.timedelta(hours=1)).interpolate("linear")
+    T_interp = T.resample(time_counter="1H", loffset=dt.timedelta(hours=1)).interpolate("linear")
 
     # trim the extra hour
     sal_new = sal_interp.isel(time_counter = np.arange(0,24,1))
@@ -53,7 +54,17 @@ for i in range(866,len(startday)-1):
 
     # And save!
     path = '/ocean/rbeutel/data/'
-    sal_new.to_netcdf(str(path)+'{:%Y%m}/S_new_{:%Y%m%d}.nc'.format(date_list[0],date_list[0]))
-    print(str(path)+'{:%Y%m}/S_new_{:%Y%m%d}.nc'.format(date_list[0],date_list[0]))
-    T_new.to_netcdf(str(path)+'{:%Y%m}/T_new_{:%Y%m%d}.nc'.format(date_list[0],date_list[0]))
-    print(str(path)+'{:%Y%m}/S_new_{:%Y%m%d}.nc'.format(date_list[0],date_list[0]))
+    
+    encoding={
+          "vosaline": {"zlib": True, "complevel": 4, "_FillValue": 0}
+    }
+    
+    sal_new.to_netcdf(str(path)+'{:%Y%m}/S_new_{:%Y%m%d}.nc'.format(date_list[1],date_list[1]), encoding=encoding)
+    print(str(path)+'{:%Y%m}/S_new_{:%Y%m%d}.nc'.format(date_list[1],date_list[1]))
+    
+    encoding={
+          "votemper": {"zlib": True, "complevel": 4, "_FillValue": 0}
+    }
+    
+    T_new.to_netcdf(str(path)+'{:%Y%m}/T_new_{:%Y%m%d}.nc'.format(date_list[1],date_list[1]), encoding=encoding)
+    print(str(path)+'{:%Y%m}/S_new_{:%Y%m%d}.nc'.format(date_list[1],date_list[1]))
