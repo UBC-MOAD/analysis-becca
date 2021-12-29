@@ -108,7 +108,7 @@ for i in range(399): #only want going for just over a year for now
 
     # And save!
     encoding={
-          "vozocrtx": {"zlib": True, "complevel": 4, "_FillValue": 0}
+          "vozocrtx": {"zlib": True, "complevel": 4, "_FillValue": np.nan}
     }
     
     path = '/ocean/rbeutel/data/'
@@ -136,7 +136,7 @@ for i in range(399): #only want going for just over a year for now
     v_new = v_new.rename('vomecrty') #name it what you want it named in final netcdf
     
     encoding={
-          "vomecrty": {"zlib": True, "complevel": 4, "_FillValue": 0}
+          "vomecrty": {"zlib": True, "complevel": 4, "_FillValue": np.nan}
     }
 
     # np.save("v_new.npy",v_new)

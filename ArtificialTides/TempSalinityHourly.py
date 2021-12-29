@@ -56,15 +56,15 @@ for i in range(len(startday)-1):
     path = '/ocean/rbeutel/data/'
     
     encoding={
-          "vosaline": {"zlib": True, "complevel": 4, "_FillValue": 0}
+          "vosaline": {"zlib": True, "complevel": 4, "_FillValue": np.nan}
     }
     
     sal_new.to_netcdf(str(path)+'{:%Y%m}/S_new_{:%Y%m%d}.nc'.format(date_list[1],date_list[1]), encoding=encoding)
     print(str(path)+'{:%Y%m}/S_new_{:%Y%m%d}.nc'.format(date_list[1],date_list[1]))
     
     encoding={
-          "votemper": {"zlib": True, "complevel": 4, "_FillValue": 0}
+          "votemper": {"zlib": True, "complevel": 4, "_FillValue": np.nan}
     }
     
     T_new.to_netcdf(str(path)+'{:%Y%m}/T_new_{:%Y%m%d}.nc'.format(date_list[1],date_list[1]), encoding=encoding)
-    print(str(path)+'{:%Y%m}/S_new_{:%Y%m%d}.nc'.format(date_list[1],date_list[1]))
+    print(str(path)+'{:%Y%m}/T_new_{:%Y%m%d}.nc'.format(date_list[1],date_list[1]))
