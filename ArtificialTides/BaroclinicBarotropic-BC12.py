@@ -22,13 +22,13 @@ e3v = e3v*0.5
 e3v = e3v.rename({'z': 'depthv'})
 
 # set runing dates:
-startday = [dt.datetime(2017,12,31)+dt.timedelta(days=i) for i in range(int(399))]
+startday = [dt.datetime(2016,12,25)+dt.timedelta(days=i) for i in range(int(406))]
 # print(len(startday))
-folders = [dt.datetime(2017,12,31)+dt.timedelta(days=7*(i+1)) for i in range(int(57))]
+folders = [dt.datetime(2016,12,25)+dt.timedelta(days=7*(i+1)) for i in range(int(58))]
 folders = np.repeat(folders,7)
 # print(len(folders))
 
-for i in range(399): #only want going for just over a year for now
+for i in range(406): #only want going for just over a year for now
 # all within a for loop so you dont have to restart the code every day for 4 years
 
     # dates for each run
