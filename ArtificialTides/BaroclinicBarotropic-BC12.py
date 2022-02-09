@@ -15,11 +15,13 @@ e3t_xshift = e3t.shift(x=-1,fill_value=0)
 e3u = e3t_xshift+e3t
 e3u = e3u*0.5
 e3u = e3u.rename({'z': 'depthu'})
+e3u = e3u.squeeze()
 
 e3t_yshift = e3t.shift(y=-1,fill_value=0)
 e3v = e3t_yshift+e3t
 e3v = e3v*0.5
 e3v = e3v.rename({'z': 'depthv'})
+e3v = e3v.squeeze()
 
 # set runing dates:
 startday = [dt.datetime(2016,12,25)+dt.timedelta(days=i) for i in range(int(406))]
