@@ -23,6 +23,10 @@ e3v = e3v*0.5
 e3v = e3v.rename({'z': 'depthv'})
 e3v = e3v.squeeze()
 
+# also out of the loop we want to get our u-mask and v-mask for the fixins later
+xmesh_u = mydata.rename({'z': 'depthu'})
+xmesh_v = mydata.rename({'z': 'depthv'})
+
 # set runing dates:
 startday = [dt.datetime(2016,12,25)+dt.timedelta(days=i) for i in range(int(406))]
 # print(len(startday))
@@ -107,6 +111,9 @@ for i in range(406): #only want going for just over a year for now
     u_new = ut_h  + uc_h_interp
     u_new = u_new.isel(time_counter = np.arange(0,24,1)) #remove extra hour 
     u_new = u_new.rename('vozocrtx') #name it what you want it named in final netcdf
+    
+    # now multiply by u-mask and v-max to get rid of the silly edge-effects
+    u_new = u_new*xmesh_u.umask[0,:,:,:]*xmesh_u.vmask[0,:,:,:]
 
     # And save!
     encoding={
@@ -136,6 +143,9 @@ for i in range(406): #only want going for just over a year for now
     v_new = vt_h  + vc_h_interp
     v_new = v_new.isel(time_counter = np.arange(0,24,1)) #remove extra hour 
     v_new = v_new.rename('vomecrty') #name it what you want it named in final netcdf
+    
+    # now multiply by u-mask and v-max to get rid of the silly edge-effects
+    v_new = v_new*xmesh_v.umask[0,:,:,:]*xmesh_v.vmask[0,:,:,:]
     
     encoding={
           "vomecrty": {"zlib": True, "complevel": 4, "_FillValue": 0}
