@@ -29,12 +29,15 @@ xmesh_v = mydata.rename({'z': 'depthv'})
 
 # set runing dates:
 startday = [dt.datetime(2016,12,25)+dt.timedelta(days=i) for i in range(int(406))]
+startday = startday[154:]
 # print(len(startday))
 folders = [dt.datetime(2016,12,25)+dt.timedelta(days=7*(i+1)) for i in range(int(58))]
 folders = np.repeat(folders,7)
+folders = folders[154:]
 # print(len(folders))
 
-for i in range(406): #only want going for just over a year for now
+# for i in range(406): #only want going for just over a year for now
+for i in range(252):
 # all within a for loop so you dont have to restart the code every day for 4 years
 
     # dates for each run
@@ -96,7 +99,9 @@ for i in range(406): #only want going for just over a year for now
     v_d = v_d.where(v_d != 0)
 
     #calcuate barotropic component
-    ut_d = (u_d*e3u[0,:,:,:]).sum(dim='depthu')/e3u[0,:,:,:].sum(dim='depthu')
+#     print(np.shape(e3u))
+#     print(np.shape(u_d))
+    ut_d = (u_d*e3u[:,:,:]).sum(dim='depthu')/e3u[:,:,:].sum(dim='depthu')
 
     #subtract from u to get baroclinic component
     uc_d = u_d-ut_d #does this work even though their ut_d lacks the depth dimension?
@@ -110,10 +115,12 @@ for i in range(406): #only want going for just over a year for now
     # added together this should give your final u!!!!!
     u_new = ut_h  + uc_h_interp
     u_new = u_new.isel(time_counter = np.arange(0,24,1)) #remove extra hour 
-    u_new = u_new.rename('vozocrtx') #name it what you want it named in final netcdf
     
     # now multiply by u-mask and v-max to get rid of the silly edge-effects
     u_new = u_new*xmesh_u.umask[0,:,:,:]*xmesh_u.vmask[0,:,:,:]
+    
+    #name it what you want it named in final netcdf
+    u_new = u_new.rename('vozocrtx')
 
     # And save!
     encoding={
@@ -127,7 +134,7 @@ for i in range(406): #only want going for just over a year for now
     # Now for V!
 
     #calcuate bartropic component
-    vt_d = (v_d*e3v[0,:,:,:]).sum(dim='depthv')/e3v[0,:,:,:].sum(dim='depthv')
+    vt_d = (v_d*e3v[:,:,:]).sum(dim='depthv')/e3v[:,:,:].sum(dim='depthv')
 
 
     #subtract from v to get baroclinic component
@@ -142,10 +149,12 @@ for i in range(406): #only want going for just over a year for now
 
     v_new = vt_h  + vc_h_interp
     v_new = v_new.isel(time_counter = np.arange(0,24,1)) #remove extra hour 
-    v_new = v_new.rename('vomecrty') #name it what you want it named in final netcdf
     
     # now multiply by u-mask and v-max to get rid of the silly edge-effects
     v_new = v_new*xmesh_v.umask[0,:,:,:]*xmesh_v.vmask[0,:,:,:]
+    
+    #name it what you want it named in final netcdf
+    v_new = v_new.rename('vomecrty') 
     
     encoding={
           "vomecrty": {"zlib": True, "complevel": 4, "_FillValue": 0}
