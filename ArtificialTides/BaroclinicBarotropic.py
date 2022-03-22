@@ -14,7 +14,7 @@ import datetime as dt
 
 #Outside the loop lets to the e3t shtuff
 mydata= xr.open_dataset('/home/sallen/MEOPAR/grid/mesh_mask201702.nc') 
-e3t = mydata['e3t_0']
+e3t = mydata['e3t_0'].squeeze()
 
 # convert e3t to e3u and to e3v
 e3t_xshift = e3t.shift(x=-1,fill_value=0)
