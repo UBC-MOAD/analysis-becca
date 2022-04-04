@@ -28,16 +28,13 @@ xmesh_u = mydata.rename({'z': 'depthu'})
 xmesh_v = mydata.rename({'z': 'depthv'})
 
 # set runing dates:
-startday = [dt.datetime(2016,12,25)+dt.timedelta(days=i) for i in range(int(406))]
-startday = startday[153:155]
+startday = [dt.datetime(2018,1,28)+dt.timedelta(days=i) for i in range(int(14*7))]
 # print(len(startday))
-folders = [dt.datetime(2016,12,25)+dt.timedelta(days=7*(i+1)) for i in range(int(58))]
+folders = [dt.datetime(2018,1,28)+dt.timedelta(days=7*(i+1)) for i in range(int(14))]
 folders = np.repeat(folders,7)
-folders = folders[153:155]
 # print(len(folders))
 
-# for i in range(406): #only want going for just over a year for now
-for i in range(2):
+for i in range(len(startday)):
 # all within a for loop so you dont have to restart the code every day for 4 years
 
     # dates for each run

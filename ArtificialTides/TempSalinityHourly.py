@@ -7,11 +7,11 @@ import datetime as dt
 import gsw
 
 # set runing dates:
-startday = [dt.datetime(2017,12,31)+dt.timedelta(days=i) for i in range(int(399))]
-folders = [dt.datetime(2017,12,31)+dt.timedelta(days=7*(i+1)) for i in range(int(57))]
+startday = [dt.datetime(2016,9,25)+dt.timedelta(days=i) for i in range(int(553))]
+folders = [dt.datetime(2016,9,25)+dt.timedelta(days=7*(i+1)) for i in range(int(79))]
 folders = np.repeat(folders,7)
 
-for i in range(len(startday)-1):
+for i in range(len(startday)):
 # all within a for loop so you dont have to restart the code every day for 4 years
 
     # dates for each run
@@ -56,7 +56,7 @@ for i in range(len(startday)-1):
     path = '/ocean/rbeutel/data/'
     
     encoding={
-          "vosaline": {"zlib": True, "complevel": 4, "_FillValue": np.nan}
+          "vosaline": {"zlib": True, "complevel": 4, "_FillValue": 0}
     }
     
     sal_new.to_netcdf(str(path)+'{:%Y%m}/S_new_{:%Y%m%d}.nc'.format(date_list[1],date_list[1]), encoding=encoding)
