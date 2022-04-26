@@ -21,6 +21,7 @@ dependencies:
   - arrow
   - bottleneck
   - cmocean
+  - dask
   - python-dateutil
   - jupyterlab
   - matplotlib
@@ -31,9 +32,10 @@ dependencies:
   - python=3
   - pytz
   - scipy
-  - xarray
+  - xarray=0.16.2
   - ffmpeg
   - IPython
   - cartopy
+  - scikit-learn=0.24.1
 
 # pip install --user --editable /ocean/rbeutel/MEOPAR/tools/SalishSeaTools
