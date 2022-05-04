@@ -51,7 +51,7 @@ def plot_panel(ax, x, y, lims, units):
     statstext = f"RMSE = {stats['RMSE']:.3f} {units}\nbias = {stats['bias']:.3f} {units}\nWSS = {stats['WSS']:.3f}"
     
     props = dict(boxstyle='round', facecolor='w', alpha=0.9)
-    ax.text(0.5, 0.04, statstext, bbox=props, transform=ax.transAxes)
+    c = ax.text(0.5, 0.04, statstext, bbox=props, transform=ax.transAxes)
     ax.set_xlim(lims)
     ax.set_ylim(lims)
     
@@ -251,8 +251,8 @@ axs[0].set_title('Salinity (g/kg)',fontsize=12)
 axs[1].set_title('Temperature ($^{\circ}$C)',fontsize=12)
 
 # plot the stats pannel
-c = plot_panel(axs[0], data['Real Salinity (g/kg)'], data['mod_vosaline'], (32,34.6), 'g/kg')
-c = plot_panel(axs[1], data[' "Temperature (C)"'], data['modelled T (C)'], (5.4,10), '$^{\circ}$C')
+plot_panel(axs[0], data['Real Salinity (g/kg)'], data['mod_vosaline'], (32,34.6), 'g/kg')
+plot_panel(axs[1], data[' "Temperature (C)"'], data['modelled T (C)'], (5.4,10), '$^{\circ}$C')
 
 plt.savefig('SSCeval.png')
 
@@ -357,7 +357,8 @@ S = [float(xr.open_dataset("/ocean/mdunphy/CIOPSW-BC12/{:%Y%m%d}00/BC12_1d_grid_
 # In[58]:
 
 
-P = np.zeros(len(S)).fill(gdepw[k][0][0])
+P = np.zeros(len(S))
+P.fill(gdepw[k][0][0])
 
 
 # In[59]:
@@ -420,8 +421,8 @@ axs[0].set_title('Salinity (g/kg)',fontsize=12)
 axs[1].set_title('Temperature ($^{\circ}$C)',fontsize=12)
 
 # plot the stats pannel
-c = plot_panel(axs[0], df['Real Salinity (g/kg)'], ciops['S'], (32,34.6), 'g/kg')
-c = plot_panel(axs[1], df[' "Temperature (C)"'], ciops['T'], (5.4,10), '$^{\circ}$C')
+plot_panel(axs[0], df['Real Salinity (g/kg)'], ciops['S'], (32,34.6), 'g/kg')
+plot_panel(axs[1], df[' "Temperature (C)"'], ciops['T'], (5.4,10), '$^{\circ}$C')
 
 plt.savefig('CIOPSeval.png')
 

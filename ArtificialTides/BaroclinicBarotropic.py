@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 # # Adding Back the Tides
 # An effort to make the daily files more accurate as they are currently lacking the tidal pumping that is so important to the flow of the Salish Sea
 
@@ -8,9 +5,6 @@ import xarray as xr
 from pathlib import Path
 import numpy as np
 import datetime as dt
-
-# start_day, end_day = 1, 30 #start day always 1, end day = the number of days you are running for (ex. 60 for monthly runs)
-# days = range(start_day, end_day+1)
 
 #Outside the loop lets to the e3t shtuff
 mydata= xr.open_dataset('/home/sallen/MEOPAR/grid/mesh_mask201702.nc') 
@@ -32,7 +26,7 @@ xmesh_u = mydata.rename({'z': 'depthu','t': 'time_counter'})
 xmesh_v = mydata.rename({'z': 'depthv','t': 'time_counter'})
 
 # set running dates
-startday = [dt.datetime(2019,2,28)+dt.timedelta(days=i) for i in range(int(60))]
+startday = [dt.datetime(2019,2,28)+dt.timedelta(days=i) for i in range(int(62))]
 
 #start the run
 for start in startday:
@@ -121,6 +115,9 @@ for start in startday:
     # now multiply by u-mask and v-max to get rid of the silly edge-effects
     u_new = u_new*xmesh_u.umask[0,:,:,:]*xmesh_u.vmask[0,:,:,:]
     
+    # multiply by factor of 2
+    u_new = u_new*2
+    
     #name it what you want it named in final netcdf
     u_new = u_new.rename('vozocrtx')
 
@@ -128,7 +125,7 @@ for start in startday:
     encoding={
           "vozocrtx": {"zlib": True, "complevel": 4, "_FillValue": 0}
     }
-    path = '/data/rbeutel/analysis/ssc_tidesback/'
+    path = '/data/rbeutel/analysis/ssc_tidesback/factor_test/'
     u_new.to_netcdf(str(path)+'U_new_{:%d%b%y}.nc'.format(date_list[1]))
     print('U_new_{:%d%b%y}.nc'.format(date_list[1]))
 
@@ -147,6 +144,9 @@ for start in startday:
     v_new = v_new.isel(time_counter = np.arange(12,36,1))
     
     v_new = v_new*xmesh_v.umask[0,:,:,:]*xmesh_v.vmask[0,:,:,:]
+    
+    # multiply by factor of 2
+    v_new = v_new*2
     
     v_new = v_new.rename('vomecrty') 
     
