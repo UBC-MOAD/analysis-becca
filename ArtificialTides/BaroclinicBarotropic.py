@@ -23,11 +23,14 @@ e3v = e3v.rename({'z': 'depthv'})
 
 # out of the loop we want to get our u-mask and v-mask for the fixins later
 xmesh = xr.open_dataset('/home/sallen/MEOPAR/grid/mesh_mask201702.nc')
-umask = (xmesh.umask).rename({'z': 'depthu','t': 'time_counter'})[0,:,:,:]
-vmask = (xmesh.vmask).rename({'z': 'depthv','t': 'time_counter'})[0,:,:,:]
+
+xmesh_u = xmesh.rename({'z': 'depthu'})
+xmesh_v = xmesh.rename({'z': 'depthv'})
+umask = xmesh_u.vmask[0,:,:,:]*xmesh_u.umask[0,:,:,:]
+vmask = xmesh_v.vmask[0,:,:,:]*xmesh_v.umask[0,:,:,:]
 
 # set running dates
-startday = [dt.datetime(2019,2,28)+dt.timedelta(days=i) for i in range(int(62))]
+startday = [dt.datetime(2019,4,2)+dt.timedelta(days=i) for i in range(int(29))]
 
 #start the run
 for start in startday:
