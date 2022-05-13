@@ -26,13 +26,13 @@ e3v = e3v.squeeze()
 # also out of the loop we want to get our u-mask and v-mask for the fixins later
 xmesh_u = mydata.rename({'z': 'depthu'})
 xmesh_v = mydata.rename({'z': 'depthv'})
+umask = xmesh_u.vmask[0,:,:,:]*xmesh_u.umask[0,:,:,:]
+vmask = xmesh_v.vmask[0,:,:,:]*xmesh_v.umask[0,:,:,:]
 
 # set runing dates:
-startday = [dt.datetime(2018,1,28)+dt.timedelta(days=i) for i in range(int(14*7))]
-# print(len(startday))
-folders = [dt.datetime(2018,1,28)+dt.timedelta(days=7*(i+1)) for i in range(int(14))]
+startday = [dt.datetime(2016,8,28)+dt.timedelta(days=i) for i in range(int(92*7))]
+folders = [dt.datetime(2016,8,28)+dt.timedelta(days=7*(i+1)) for i in range(int(92))]
 folders = np.repeat(folders,7)
-# print(len(folders))
 
 for i in range(len(startday)):
 # all within a for loop so you dont have to restart the code every day for 4 years
@@ -41,7 +41,9 @@ for i in range(len(startday)):
     date_list_daily = [startday[i],startday[i+1]]
     folderday_daily = [folders[i], folders[i+1]]
     date_list_hourly = [startday[i+1],startday[i+2]]
+#     print(date_list_hourly)
     folderday_hourly = [folders[i+1], folders[i+2]]
+#     print(folderday_hourly)
 
     # In[3]:
     #load U
@@ -96,9 +98,7 @@ for i in range(len(startday)):
     v_d = v_d.where(v_d != 0)
 
     #calcuate barotropic component
-#     print(np.shape(e3u))
-#     print(np.shape(u_d))
-    ut_d = (u_d*e3u[:,:,:]).sum(dim='depthu')/e3u[:,:,:].sum(dim='depthu')
+    ut_d = (u_d*e3u*umask).sum(dim='depthu')/(e3u*umask).sum(dim='depthu')
 
     #subtract from u to get baroclinic component
     uc_d = u_d-ut_d #does this work even though their ut_d lacks the depth dimension?
@@ -114,10 +114,13 @@ for i in range(len(startday)):
     u_new = u_new.isel(time_counter = np.arange(0,24,1)) #remove extra hour 
     
     # now multiply by u-mask and v-max to get rid of the silly edge-effects
-    u_new = u_new*xmesh_u.umask[0,:,:,:]*xmesh_u.vmask[0,:,:,:]
+    u_new = u_new*umask
     
     #name it what you want it named in final netcdf
     u_new = u_new.rename('vozocrtx')
+    
+    # order the variables the way you need em
+    u_new = u_new.transpose('time_counter','depthu','y','x')
 
     # And save!
     encoding={
@@ -126,18 +129,16 @@ for i in range(len(startday)):
     
     path = '/ocean/rbeutel/data/'
     u_new.to_netcdf(str(path)+'{:%Y%m}/U_new_{:%Y%m%d}.nc'.format(date_list_hourly[0],date_list_hourly[0]), encoding=encoding)
-    
+    print('U_new_{:%d%b%y}'.format(date_list_hourly[0]))
     
     # Now for V!
 
     #calcuate bartropic component
-    vt_d = (v_d*e3v[:,:,:]).sum(dim='depthv')/e3v[:,:,:].sum(dim='depthv')
+    vt_d = (v_d*e3v*vmask).sum(dim='depthv')/(e3v*vmask).sum(dim='depthv')
 
 
     #subtract from v to get baroclinic component
     vc_d = v_d-vt_d 
-
-    # vc_d.load(scheduler="processes", num_workers=n)
 
     # interpolate + resample uc_d to get it in an hourly format
     offset = dt.timedelta(hours=1) 
@@ -148,15 +149,15 @@ for i in range(len(startday)):
     v_new = v_new.isel(time_counter = np.arange(0,24,1)) #remove extra hour 
     
     # now multiply by u-mask and v-max to get rid of the silly edge-effects
-    v_new = v_new*xmesh_v.umask[0,:,:,:]*xmesh_v.vmask[0,:,:,:]
+    v_new = v_new*vmask
     
     #name it what you want it named in final netcdf
     v_new = v_new.rename('vomecrty') 
     
+    v_new = v_new.transpose('time_counter','depthv','y','x')
+    
     encoding={
           "vomecrty": {"zlib": True, "complevel": 4, "_FillValue": 0}
     }
-
-    # np.save("v_new.npy",v_new)
     v_new.to_netcdf(str(path)+'{:%Y%m}/V_new_{:%Y%m%d}.nc'.format(date_list_hourly[0],date_list_hourly[0]), encoding=encoding)
-#     print('v_new_{:%d%b%y}_{:%d%b%y}.nc complete'.format(date_list[0],date_list[-1]))
+    print('V_new_{:%d%b%y}'.format(date_list_hourly[0]))
