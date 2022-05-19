@@ -45,10 +45,9 @@ for i in range(len(startday)):
     folderday_hourly = [folders[i+1], folders[i+2]]
 #     print(folderday_hourly)
 
-    # In[3]:
-    #load U
     path = Path("/ocean/mdunphy/CIOPSW-BC12/")
-
+    
+    # load U
     drop_vars = (
         "sbu", "tauuo", "time_counter_bounds", "time_instant_bounds", "uos", "time_instant",
     )
@@ -94,8 +93,8 @@ for i in range(len(startday)):
     v_d = mydata['vo']
     
     #lets mask both daily files so all the land values are nan
-    u_d = u_d.where(u_d != 0)
-    v_d = v_d.where(v_d != 0)
+#     u_d = u_d.where(u_d != 0)
+#     v_d = v_d.where(v_d != 0)
 
     #calcuate barotropic component
     ut_d = (u_d*e3u*umask).sum(dim='depthu')/(e3u*umask).sum(dim='depthu')

@@ -6,21 +6,6 @@ from pathlib import Path
 import numpy as np
 import datetime as dt
 
-# #Outside the loop lets to the e3t shtuff
-# mydata= xr.open_dataset('/home/sallen/MEOPAR/grid/mesh_mask201702.nc') 
-# e3t = mydata['e3t_0'].squeeze()
-
-# # convert e3t to e3u and to e3v
-# e3t_xshift = e3t.shift(x=-1,fill_value=0)
-# e3u = e3t_xshift+e3t
-# e3u = e3u*0.5
-# e3u = e3u.rename({'z': 'depthu'})
-
-# e3t_yshift = e3t.shift(y=-1,fill_value=0)
-# e3v = e3t_yshift+e3t
-# e3v = e3v*0.5
-# e3v = e3v.rename({'z': 'depthv'})
-
 # out of the loop we want to get our u-mask and v-mask for the fixins later
 xmesh = xr.open_dataset('/home/sallen/MEOPAR/grid/mesh_mask201702.nc')
 
@@ -73,7 +58,6 @@ for start in startday:
     )
 
     files = [sorted(path.glob("{:%d%b%y}".format(day).lower()+"/SalishSea_1h_*_grid_U.nc")) for day in date_list]
-    # files = [sorted(path.glob("{:02}mar19/SalishSea_1h_*_grid_U.nc".format(day))) for day in days]
 
     mydata = xr.open_mfdataset(files, drop_variables=drop_vars)
     u = mydata['vozocrtx']
@@ -86,7 +70,6 @@ for start in startday:
     )
 
     files = [sorted(path.glob("{:%d%b%y}".format(day).lower()+"/SalishSea_1h_*_grid_V.nc")) for day in date_list]
-    # files = [sorted(path.glob("{:02}mar19/SalishSea_1h_*_grid_V.nc".format(day))) for day in days]
 
     mydata = xr.open_mfdataset(files, drop_variables=drop_vars)
     v = mydata['vomecrty']
