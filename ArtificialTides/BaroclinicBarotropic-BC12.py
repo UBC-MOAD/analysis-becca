@@ -8,20 +8,8 @@ import datetime as dt
 
 # Outside of loop: we WILL need to do some conversions here, so get e3t from the mesh_mask file
 mydata = xr.open_dataset("/ocean/mdunphy/CIOPSW-BC12/grid/mesh_mask_Bathymetry_NEP36_714x1020_SRTM30v11_NOAA3sec_WCTSS_JdeFSalSea.nc")
-e3t = mydata['e3t_0']
-
-    # convert e3t to e3u and to e3v
-e3t_xshift = e3t.shift(x=-1,fill_value=0)
-e3u = e3t_xshift+e3t
-e3u = e3u*0.5
-e3u = e3u.rename({'z': 'depthu'})
-e3u = e3u.squeeze()
-
-e3t_yshift = e3t.shift(y=-1,fill_value=0)
-e3v = e3t_yshift+e3t
-e3v = e3v*0.5
-e3v = e3v.rename({'z': 'depthv'})
-e3v = e3v.squeeze()
+e3t = mydata['e3t_0'][0,:,:,:]
+H = np.sum(e3t,axis=0)
 
 # also out of the loop we want to get our u-mask and v-mask for the fixins later
 xmesh_u = mydata.rename({'z': 'depthu'})
@@ -29,7 +17,7 @@ xmesh_v = mydata.rename({'z': 'depthv'})
 umask = xmesh_u.vmask[0,:,:,:]*xmesh_u.umask[0,:,:,:]
 vmask = xmesh_v.vmask[0,:,:,:]*xmesh_v.umask[0,:,:,:]
 
-# set runing dates:
+# set running dates:
 startday = [dt.datetime(2016,8,28)+dt.timedelta(days=i) for i in range(int(92*7))]
 folders = [dt.datetime(2016,8,28)+dt.timedelta(days=7*(i+1)) for i in range(int(92))]
 folders = np.repeat(folders,7)
@@ -92,25 +80,47 @@ for i in range(len(startday)):
     mydata = xr.open_mfdataset(files, drop_variables=drop_vars)
     v_d = mydata['vo']
     
-    #lets mask both daily files so all the land values are nan
+    #got to resample the veloties right away so that we can add the impact of stretching and compressing the grid
+    offset = dt.timedelta(hours=1)
+    u_d = u_d.resample(time_counter="1H", loffset=offset).interpolate("linear")
+    v_d = v_d.resample(time_counter="1H", loffset=offset).interpolate("linear")
+
 #     u_d = u_d.where(u_d != 0)
 #     v_d = v_d.where(v_d != 0)
 
+    # bring in ssh for the same days
+    drop_vars = (
+    "mldkz5", 'mldr10_1', "nav_lat", "nav_lon", 'time_counter_bounds', 'time_instant',
+    'time_instant_bounds', 'sbs', 'sbt', 'sos', 'ssh_ib', 'ssh_tide', 'tos'
+    )
+    
+    files = [sorted(path.glob("{:%Y%m%d}00/BC12_1h_grid_T_2D_{:%Y%m%d}_{:%Y%m%d}.nc".format(folderday_daily[i], date_list_daily[i], date_list_daily[i]))) for i in range(len(date_list_daily))]
+    
+    mydata = xr.open_mfdataset(files, drop_variables=drop_vars)
+    eta = mydata['zos']
+    
+    #calculate the e3t over this time period
+    e3t_ssh = e3t+((eta*e3t)/H)
+    
+    # convert e3t to e3u and to e3v
+    e3t_xshift = e3t_ssh.shift(x=-1,fill_value=0)
+    e3u = e3t_xshift+e3t
+    e3u = e3u*0.5 #check to make sure this worked
+    e3u = e3u.rename({'z': 'depthu'})
+
+    e3t_yshift = e3t_ssh.shift(y=-1,fill_value=0)
+    e3v = e3t_yshift+e3t
+    e3v = e3v*0.5
+    e3v = e3v.rename({'z': 'depthv'})
+    
     #calcuate barotropic component
     ut_d = (u_d*e3u*umask).sum(dim='depthu')/(e3u*umask).sum(dim='depthu')
 
     #subtract from u to get baroclinic component
-    uc_d = u_d-ut_d #does this work even though their ut_d lacks the depth dimension?
-
-
-    # interpolate + resample uc_d to get it in an hourly format
-    offset = dt.timedelta(hours=1)
-    uc_h_interp = uc_d.resample(time_counter="1H", loffset=offset).interpolate("linear")
-    #instead of taking 12hours off each side like when done with SSC, this method takes off 24hours on the end!
+    uc_d = u_d-ut_d
 
     # added together this should give your final u!!!!!
-    u_new = ut_h  + uc_h_interp
-    u_new = u_new.isel(time_counter = np.arange(0,24,1)) #remove extra hour 
+    u_new = ut_h  + uc_d 
     
     # now multiply by u-mask and v-max to get rid of the silly edge-effects
     u_new = u_new*umask
@@ -135,17 +145,10 @@ for i in range(len(startday)):
     #calcuate bartropic component
     vt_d = (v_d*e3v*vmask).sum(dim='depthv')/(e3v*vmask).sum(dim='depthv')
 
-
     #subtract from v to get baroclinic component
     vc_d = v_d-vt_d 
 
-    # interpolate + resample uc_d to get it in an hourly format
-    offset = dt.timedelta(hours=1) 
-    vc_h_interp = vc_d.resample(time_counter="1H", loffset=offset).interpolate("linear")
-    #instead of taking 12hours off each side like when done with SSC, this method takes off 24hours on the end!
-
-    v_new = vt_h  + vc_h_interp
-    v_new = v_new.isel(time_counter = np.arange(0,24,1)) #remove extra hour 
+    v_new = vt_h  + vc_d 
     
     # now multiply by u-mask and v-max to get rid of the silly edge-effects
     v_new = v_new*vmask
