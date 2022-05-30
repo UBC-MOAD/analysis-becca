@@ -7,8 +7,8 @@ import datetime as dt
 import gsw
 
 # set runing dates:
-startday = [dt.datetime(2016,9,25)+dt.timedelta(days=i) for i in range(int(553))]
-folders = [dt.datetime(2016,9,25)+dt.timedelta(days=7*(i+1)) for i in range(int(79))]
+startday = [dt.datetime(2018,4,1)+dt.timedelta(days=i) for i in range(int(5*7))]
+folders = [dt.datetime(2018,4,1)+dt.timedelta(days=7*(i+1)) for i in range(int(5))]
 folders = np.repeat(folders,7)
 
 for i in range(len(startday)):
