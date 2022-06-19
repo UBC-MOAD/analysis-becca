@@ -204,6 +204,8 @@ data['Real Salinity (g/kg)'] = gsw.conversions.SA_from_SP(np.array(data[' "Pract
 # convert modelled from CT to in-situ T
 data['modelled T (C)'] = gsw.conversions.t_from_CT(np.array(data['mod_vosaline']), np.array(data['mod_votemper']), np.array(data["Sea Pressure (db)"]))
 
+#save these values in a csv
+data.to_csv('SSCeval.csv')
 
 # ### mod vs. obs plots
 
@@ -376,6 +378,8 @@ T = gsw.conversions.t_from_CT(S, CT, P)
 d = {'T': T, 'S': S, 'P': P}
 ciops = pd.DataFrame(data=d, index=dates)
 
+#save these values in a csv
+ciops.to_csv('CIOPSeval.csv')
 
 # In[114]:
 
@@ -426,28 +430,28 @@ plot_panel(axs[1], df[' "Temperature (C)"'], ciops['T'], (5.4,10), '$^{\circ}$C'
 
 plt.savefig('CIOPSeval.png')
 
-#plt timeseries of all
-fig, ax = plt.subplots(figsize=(14, 7))
+# #plt timeseries of all
+# fig, ax = plt.subplots(figsize=(14, 7))
 
-ax.plot(JF2C['dtUTC'],JF2C[' "Practical Salinity (psu)"'], c='r')
-ax2.plot(data['mod_vosaline'],c='r',alpha=0.5)
-ax2.plot(ciops['S'],c='r--',alpha=0.5)
-ax.set_ylabel("Salinity (psu)",fontsize=14, c='r')
-ax.set_ylim(31.9,34.1)
-ax.set_xlim(pd.to_datetime('2012-10-31'), pd.to_datetime('2020-09-30'))
+# ax.plot(JF2C['dtUTC'],JF2C[' "Practical Salinity (psu)"'], c='r')
+# ax2.plot(data['mod_vosaline'],c='r',alpha=0.5)
+# ax2.plot(ciops['S'],c='r--',alpha=0.5)
+# ax.set_ylabel("Salinity (psu)",fontsize=14, c='r')
+# ax.set_ylim(31.9,34.1)
+# ax.set_xlim(pd.to_datetime('2012-10-31'), pd.to_datetime('2020-09-30'))
 
-ax2 = ax2=ax.twinx()
-ax2.plot(JF2C['dtUTC'],JF2C[' "Temperature (C)"'], c='b')
-ax2.plot(data['modelled T (C)'],c='b',alpha=0.5)
-ax2.plot(ciops['T'],c='b--',alpha=0.5)
-ax2.set_ylabel("Temperature (C)",fontsize=14, c='b')
+# ax2 = ax2=ax.twinx()
+# ax2.plot(JF2C['dtUTC'],JF2C[' "Temperature (C)"'], c='b')
+# ax2.plot(data['modelled T (C)'],c='b',alpha=0.5)
+# ax2.plot(ciops['T'],c='b--',alpha=0.5)
+# ax2.set_ylabel("Temperature (C)",fontsize=14, c='b')
 
-# #set summer upwelling as apr1-sep30
-season = [pd.to_datetime(pd.to_datetime('2013-04-01') + relativedelta(months=6*i)) for i in range(16)]
-for i in range(0, len(season),2):
-    ax.fill_between(JF2C['dtUTC'], 30, 35, where=(JF2C['dtUTC']<season[i+1])&(JF2C['dtUTC']>=season[i]), color='whitesmoke', alpha=0.3)
+# # #set summer upwelling as apr1-sep30
+# season = [pd.to_datetime(pd.to_datetime('2013-04-01') + relativedelta(months=6*i)) for i in range(16)]
+# for i in range(0, len(season),2):
+#     ax.fill_between(JF2C['dtUTC'], 30, 35, where=(JF2C['dtUTC']<season[i+1])&(JF2C['dtUTC']>=season[i]), color='whitesmoke', alpha=0.3)
 
-plt.savefig('evalTimeseries.png')
+# plt.savefig('evalTimeseries.png')
     
     # In[ ]:
 
