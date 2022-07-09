@@ -7,8 +7,9 @@ import datetime as dt
 import gsw
 
 # set runing dates:
-startday = [dt.datetime(2018,4,1)+dt.timedelta(days=i) for i in range(int(5*7))]
-folders = [dt.datetime(2018,4,1)+dt.timedelta(days=7*(i+1)) for i in range(int(5))]
+n = 2 #number of weeks you want to make +1
+startday = [dt.datetime(2016,9,18)+dt.timedelta(days=i) for i in range(int(n*7))]
+folders = [dt.datetime(2016,9,18)+dt.timedelta(days=7*(i+1)) for i in range(int(n))]
 folders = np.repeat(folders,7)
 
 for i in range(len(startday)):
@@ -16,7 +17,9 @@ for i in range(len(startday)):
 
     # dates for each run
     date_list = [startday[i],startday[i+1]]
+#     print(date_list)
     folderday = [folders[i], folders[i+1]]
+#     print(folderday)
 
     # In[3]:
     #load U
@@ -27,6 +30,7 @@ for i in range(len(startday)):
     )
 
     files = [sorted(path.glob("{:%Y%m%d}00/BC12_1d_grid_T_{:%Y%m%d}_{:%Y%m%d}.nc".format(folderday[i], date_list[i], date_list[i]))) for i in range(len(date_list))]
+#     print(files)
 
     mydata = xr.open_mfdataset(files, drop_variables=drop_vars)
     sal = mydata['so']
