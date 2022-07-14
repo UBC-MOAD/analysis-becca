@@ -7,9 +7,9 @@ import datetime as dt
 import gsw
 
 # set runing dates:
-n = 2 #number of weeks you want to make +1
-startday = [dt.datetime(2016,9,18)+dt.timedelta(days=i) for i in range(int(n*7))]
-folders = [dt.datetime(2016,9,18)+dt.timedelta(days=7*(i+1)) for i in range(int(n))]
+n = 92 #number of weeks you want to make +1
+startday = [dt.datetime(2016,8,28)+dt.timedelta(days=i) for i in range(int(n*7))]
+folders = [dt.datetime(2016,8,28)+dt.timedelta(days=7*(i+1)) for i in range(int(n))]
 folders = np.repeat(folders,7)
 
 for i in range(len(startday)):
@@ -45,29 +45,33 @@ for i in range(len(startday)):
     T = gsw.t_from_CT(sal,CT,potT.deptht)
 
     # interpolate + resample uc_d to get it in an hourly format
-    sal_interp = sal.resample(time_counter="1H", loffset=dt.timedelta(hours=1)).interpolate("linear")
+#     sal_interp = sal.resample(time_counter="1H", loffset=dt.timedelta(hours=1)).interpolate("linear")
     T_interp = T.resample(time_counter="1H", loffset=dt.timedelta(hours=1)).interpolate("linear")
 
     # trim the extra hour
-    sal_new = sal_interp.isel(time_counter = np.arange(0,24,1))
+#     sal_new = sal_interp.isel(time_counter = np.arange(0,24,1))
     T_new = T_interp.isel(time_counter = np.arange(0,24,1))
     
     #naming format same as salishseacast
-    sal_new = sal_new.rename('vosaline')
+#     sal_new = sal_new.rename('vosaline')
     T_new = T_new.rename('votemper')
+    
+    # order the variables the way you need em
+    T_new = T_new.transpose('time_counter','deptht','y','x')
+#     sal_new = sal_new.transpose('time_counter','deptht','y','x')
 
     # And save!
     path = '/ocean/rbeutel/data/'
     
-    encoding={
-          "vosaline": {"zlib": True, "complevel": 4, "_FillValue": 0}
-    }
+#     encoding={
+#           "vosaline": {"zlib": True, "complevel": 4, "_FillValue": 0}
+#     }
     
-    sal_new.to_netcdf(str(path)+'{:%Y%m}/S_new_{:%Y%m%d}.nc'.format(date_list[1],date_list[1]), encoding=encoding)
-    print(str(path)+'{:%Y%m}/S_new_{:%Y%m%d}.nc'.format(date_list[1],date_list[1]))
+#     sal_new.to_netcdf(str(path)+'{:%Y%m}/S_new_{:%Y%m%d}.nc'.format(date_list[1],date_list[1]), encoding=encoding)
+#     print(str(path)+'{:%Y%m}/S_new_{:%Y%m%d}.nc'.format(date_list[1],date_list[1]))
     
     encoding={
-          "votemper": {"zlib": True, "complevel": 4, "_FillValue": np.nan}
+          "votemper": {"zlib": True, "complevel": 4, "_FillValue": 0}
     }
     
     T_new.to_netcdf(str(path)+'{:%Y%m}/T_new_{:%Y%m%d}.nc'.format(date_list[1],date_list[1]), encoding=encoding)
