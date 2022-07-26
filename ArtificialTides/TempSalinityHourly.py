@@ -7,10 +7,12 @@ import datetime as dt
 import gsw
 
 # set runing dates:
-n = 92 #number of weeks you want to make +1
-startday = [dt.datetime(2016,8,28)+dt.timedelta(days=i) for i in range(int(n*7))]
-folders = [dt.datetime(2016,8,28)+dt.timedelta(days=7*(i+1)) for i in range(int(n))]
+n = 18
+startday = [dt.datetime(2016,5,1)+dt.timedelta(days=i) for i in range(int(n*7))]
+folders = [dt.datetime(2016,5,1)+dt.timedelta(days=7*(i+1)) for i in range(int(n))]
 folders = np.repeat(folders,7)
+print(startday[0])
+print(startday[-1])
 
 for i in range(len(startday)):
 # all within a for loop so you dont have to restart the code every day for 4 years
