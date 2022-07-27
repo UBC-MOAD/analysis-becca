@@ -36,45 +36,45 @@ for i in range(len(startday)):
 
     mydata = xr.open_mfdataset(files, drop_variables=drop_vars)
     sal = mydata['so']
-    potT = mydata['thetao']
+#     potT = mydata['thetao']
     
     # replace all land values with nan so that math isn't done on them
     sal = sal.where(sal != 0)
-    potT = potT.where(potT != 0)
+#     potT = potT.where(potT != 0)
 
     #convert potential temp to in-situ temp using gws toolbox
-    CT = gsw.CT_from_pt(sal,potT)
-    T = gsw.t_from_CT(sal,CT,potT.deptht)
+#     CT = gsw.CT_from_pt(sal,potT)
+#     T = gsw.t_from_CT(sal,CT,potT.deptht)
 
     # interpolate + resample uc_d to get it in an hourly format
-#     sal_interp = sal.resample(time_counter="1H", loffset=dt.timedelta(hours=1)).interpolate("linear")
-    T_interp = T.resample(time_counter="1H", loffset=dt.timedelta(hours=1)).interpolate("linear")
+    sal_interp = sal.resample(time_counter="1H", loffset=dt.timedelta(hours=1)).interpolate("linear")
+#     T_interp = T.resample(time_counter="1H", loffset=dt.timedelta(hours=1)).interpolate("linear")
 
     # trim the extra hour
-#     sal_new = sal_interp.isel(time_counter = np.arange(0,24,1))
-    T_new = T_interp.isel(time_counter = np.arange(0,24,1))
+    sal_new = sal_interp.isel(time_counter = np.arange(0,24,1))
+#     T_new = T_interp.isel(time_counter = np.arange(0,24,1))
     
     #naming format same as salishseacast
-#     sal_new = sal_new.rename('vosaline')
-    T_new = T_new.rename('votemper')
+    sal_new = sal_new.rename('vosaline')
+#     T_new = T_new.rename('votemper')
     
     # order the variables the way you need em
-    T_new = T_new.transpose('time_counter','deptht','y','x')
-#     sal_new = sal_new.transpose('time_counter','deptht','y','x')
+#     T_new = T_new.transpose('time_counter','deptht','y','x')
+    sal_new = sal_new.transpose('time_counter','deptht','y','x')
 
     # And save!
     path = '/ocean/rbeutel/data/'
     
-#     encoding={
-#           "vosaline": {"zlib": True, "complevel": 4, "_FillValue": 0}
-#     }
-    
-#     sal_new.to_netcdf(str(path)+'{:%Y%m}/S_new_{:%Y%m%d}.nc'.format(date_list[1],date_list[1]), encoding=encoding)
-#     print(str(path)+'{:%Y%m}/S_new_{:%Y%m%d}.nc'.format(date_list[1],date_list[1]))
-    
     encoding={
-          "votemper": {"zlib": True, "complevel": 4, "_FillValue": 0}
+          "vosaline": {"zlib": True, "complevel": 4, "_FillValue": 0}
     }
     
-    T_new.to_netcdf(str(path)+'{:%Y%m}/T_new_{:%Y%m%d}.nc'.format(date_list[1],date_list[1]), encoding=encoding)
-    print(str(path)+'{:%Y%m}/T_new_{:%Y%m%d}.nc'.format(date_list[1],date_list[1]))
+    sal_new.to_netcdf(str(path)+'{:%Y%m}/S_new_{:%Y%m%d}.nc'.format(date_list[1],date_list[1]), encoding=encoding)
+    print(str(path)+'{:%Y%m}/S_new_{:%Y%m%d}.nc'.format(date_list[1],date_list[1]))
+    
+#     encoding={
+#           "votemper": {"zlib": True, "complevel": 4, "_FillValue": 0}
+#     }
+    
+#     T_new.to_netcdf(str(path)+'{:%Y%m}/T_new_{:%Y%m%d}.nc'.format(date_list[1],date_list[1]), encoding=encoding)
+#     print(str(path)+'{:%Y%m}/T_new_{:%Y%m%d}.nc'.format(date_list[1],date_list[1]))
