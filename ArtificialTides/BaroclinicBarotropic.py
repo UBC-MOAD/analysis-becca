@@ -23,9 +23,9 @@ for start in startday:
 # dates for each run
     numdays = 3 #16 for all except the last run
     date_list = [start + dt.timedelta(days=x) for x in range(numdays)]
-
+#     print(date_list)
     
-    path = Path("/results/SalishSea/nowcast-green.201812/")
+    path = Path("/results2/SalishSea/nowcast-green.201905/")
     
     #load e3t data (changes with ssh due to tides)
     drop_vars = (
@@ -35,6 +35,7 @@ for start in startday:
     )
 
     files = [sorted(path.glob("{:%d%b%y}".format(day).lower()+"/SalishSea_1h_*_carp_T.nc")) for day in date_list]
+#     print(files)
 
     mydata = xr.open_mfdataset(files, drop_variables=drop_vars)
     e3t = mydata['e3t']
