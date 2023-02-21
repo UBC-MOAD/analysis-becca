@@ -2,6 +2,7 @@
 
 import xarray as xr
 import numpy as np
+import pandas as pd
 
 # maybe having a dataframe would simplify all of this excessive messy code??
 starttime = 1
@@ -160,6 +161,6 @@ for num in year:
 data = {'transport':transport, 'salinity_start':salinity_start, 'salinity_end':salinity_end, 'temp_start':temp_start, 'temp_end':temp_end,
        'dic_start':dic_start, 'dic_end':dic_end, 'nit_start':nit_start, 'nit_end':nit_end, 'sil_start':sil_start, 'sil_end':sil_end,
        'section':section, 'age':age, 'depth':depth}
-dataframe = pd.DataFrame(data)
+dataframe = pd.DataFrame(data=data)
 
 dataframe.to_csv('FiveYearProperties.csv')
