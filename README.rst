@@ -3,7 +3,7 @@ UBC-MOAD Analysis
 *********************************************
 :License: Apache License, Version 2.0
 
-This is a collection of analyses by Rebecca Beutel
+This is a collection of analyses by Becca Beutel
 .
 Most of the files are Jupyter Notebooks.
 Please see the ``README.md`` files in each directory for links to read-only renderings of the notebooks.
