@@ -18,8 +18,8 @@ umask = xmesh_u.vmask[0,:,:,:]*xmesh_u.umask[0,:,:,:]
 vmask = xmesh_v.vmask[0,:,:,:]*xmesh_v.umask[0,:,:,:]
 
 # set running dates:
-startday = [dt.datetime(2016,5,1)+dt.timedelta(days=i) for i in range(int(18*7))]
-folders = [dt.datetime(2016,5,1)+dt.timedelta(days=7*(i+1)) for i in range(int(18))]
+startday = [dt.datetime(2017,8,20)+dt.timedelta(days=i) for i in range(int(2*7))]
+folders = [dt.datetime(2017,8,20)+dt.timedelta(days=7*(i+1)) for i in range(int(2))]
 folders = np.repeat(folders,7)
 print(startday[0])
 print(startday[-1])
@@ -138,7 +138,7 @@ for i in range(len(startday)):
           "vozocrtx": {"zlib": True, "complevel": 4, "_FillValue": 0}
     }
     
-    path = '/ocean/rbeutel/data/'
+    path = '/ocean/rbeutel/CIOPSBC12_hourly/'
     u_new.to_netcdf(str(path)+'{:%Y%m}/U_new_{:%Y%m%d}.nc'.format(date_list_hourly[0],date_list_hourly[0]), encoding=encoding)
     print('U_new_{:%d%b%y}'.format(date_list_hourly[0]))
     
