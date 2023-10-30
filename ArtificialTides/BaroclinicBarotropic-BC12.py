@@ -18,8 +18,8 @@ umask = xmesh_u.vmask[0,:,:,:]*xmesh_u.umask[0,:,:,:]
 vmask = xmesh_v.vmask[0,:,:,:]*xmesh_v.umask[0,:,:,:]
 
 # set running dates:
-startday = [dt.datetime(2017,8,20)+dt.timedelta(days=i) for i in range(int(2*7))]
-folders = [dt.datetime(2017,8,20)+dt.timedelta(days=7*(i+1)) for i in range(int(2))]
+startday = [dt.datetime(2017,8,20)+dt.timedelta(days=i) for i in range(int(9*7))]
+folders = [dt.datetime(2017,8,20)+dt.timedelta(days=7*(i+1)) for i in range(int(9))]
 folders = np.repeat(folders,7)
 print(startday[0])
 print(startday[-1])
