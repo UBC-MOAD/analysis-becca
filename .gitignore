@@ -148,10 +148,15 @@ cython_debug/
 *.sav
 *.png
 *jpeg
+*.index
+*.tar
 
-#don't want any of the Ocean Parcels Results files (bot temp and final) uploaded
+#don't want any of the Ocean Parcels or Ariane Results files (bot temp and final) uploaded
 out*
 becca_drifters*
+*_old
+*poo
+
 
 #its called maybe delete for a reason
 maybe_delete/

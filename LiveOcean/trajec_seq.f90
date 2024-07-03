@@ -201,7 +201,6 @@ SUBROUTINE trajec_seq()
        st   , & !
        r_lmt, & !
        dumm, & !
-       timestep, & !
        icount
 
   REAL(kind=rprec), DIMENSION(:), ALLOCATABLE :: & !
@@ -248,6 +247,7 @@ SUBROUTINE trajec_seq()
   LOGICAL :: open_door=.TRUE., first_pass=.TRUE., first_call=.TRUE.
   LOGICAL :: Logic_flag
   LOGICAL :: horizontal_eddy, vert_NS_eddy, vert_EW_eddy
+  REAL(kind=rprec) :: age_bump=100
 
   !-------------------------------------------!
   !- DYNAMIC ALLOCATIONS AND INITIALIZATIONS -!
@@ -1269,21 +1269,18 @@ SUBROUTINE trajec_seq()
                  vert_EW_eddy = (vv(is+1, js, ks-1, 1)*vv(is+1, js, ks, 1) < 0.) .AND. &
                       (ww(is+1, js, ks, 1)*ww(is+1, js+1, ks, 1) < 0.)
 
-                 IF ( .not. horizontal_eddy .and. .not. vert_NS_eddy .and. .not. vert_EW_eddy) THEN
-                    ! Eddy problem
-                    CASE = 4
-                 ELSEIF ( horizontal_eddy .NEQV. (vert_NS_eddy .NEQV. vert_EW_eddy) ) THEN
-                    IF (horizontal_eddy) THEN
-                       CASE = 1
-                    ELSEIF (vert_NS_eddy) THEN
-                       CASE = 2
-                    ELSE
-                       CASE = 3
-                    ENDIF
+                 IF (horizontal_eddy .and. .not. vert_NS_eddy .and. .not. vert_EW_eddy) THEN
+                    CASE = 1
+                 ELSEIF (vert_NS_eddy .and. .not. horizontal_eddy .and. .not. vert_EW_eddy) THEN
+                    CASE = 2
+                 ELSEIF (vert_EW_eddy .and. .not. horizontal_eddy .and. .not. vert_NS_eddy) THEN
+                    CASE = 3
                  ELSE
-                    xs = abs(gi(n) - ii )
-                    ys = abs(gj(n) - jj )
-                    zs = abs(-gk(n) + kk)
+                    xs = abs(gi(n) - nint(gi(n)))
+                    ys = abs(gj(n) - nint(gj(n)))
+                    zs = abs(gk(n) - nint(gk(n)))
+                    write (lun_standard, *) ii, jj, kk, 'ii, jj, kk'
+                    write (lun_standard, *) xs, ys, zs, 'xs, ys, zs'
                     IF ((xs > ys) .AND. (xs > zs)) THEN
                        CASE = 3
                     ELSEIF ((ys > xs) .AND. (ys > zs)) THEN
@@ -1295,12 +1292,12 @@ SUBROUTINE trajec_seq()
 
                  IF (CASE == 1) THEN
                     write (lun_standard, *) 'Horizontal Eddy', n
-                    gi(n) = gi(n) + timestep * 0.5 * (uu(is, js, ks, 1) + uu(is, js+1, ks, 1)) / tfac(n)
-                    gj(n) = gj(n) + timestep * 0.5 * (vv(is, js, ks, 1) + vv(is+1, js, ks, 1)) / tfac(n)
+                    gi(n) = gi(n) + age_bump * 0.5 * (uu(is, js, ks, 1) + uu(is, js+1, ks, 1)) / tfac(n)
+                    gj(n) = gj(n) + age_bump * 0.5 * (vv(is, js, ks, 1) + vv(is+1, js, ks, 1)) / tfac(n)
                     w(n) = ww(is, js, ks, 1)   - &
                          (gk(n) + REAL(k0(n), kind=rprec))   * (ww(is, js, ks+1, 1) - ww(is, js, ks, 1))
-                    gk(n) = gk(n) - 10 * w(n) / tfac(n)
-                    age(n) = age(n) + timestep
+                    gk(n) = gk(n) - age_bump * w(n) / tfac(n)
+                    age(n) = age(n) + age_bump
                     IF (gi(n) > int(gi(n))) then
                        i0(n) = int(gi(n)) + 1
                     ELSE
@@ -1314,14 +1311,22 @@ SUBROUTINE trajec_seq()
                  ELSEIF (CASE == 2) THEN
                     write (lun_standard, *) 'Vertical Eddy, NS axis', n
                     write (lun_standard, *) gi(n), gj(n), gk(n), ks
-                    write (lun_standard, *) uu(is, js, ks, 1), uu(is, js, ks+1, 1), &
-                         ww(is, js, ks, 1), ww(is+1, js, ks, 1)
-                    gi(n) = gi(n) + 10 * 0.5 * (uu(is, js, ks, 1) + uu(is, js, ks+1, 1)) / tfac(n)
-                    gk(n) = gk(n) - 10 * 0.5 * (ww(is, js, ks, 1) + ww(is+1, js, ks, 1)) / tfac(n)
-                    v(n) = vv(is, js-1, ks, 1) + &
-                         (gj(n) - REAL(j0(n)-1, kind=rprec)) * (vv(is, js, ks, 1) - vv(is, js-1, ks, 1))
-                    gj(n) = gj(n) + 10 * v(n) / tfac(n)
-                    age(n) = age(n) + 10
+                    !write (lun_standard, *) uu(is, js, ks, 1), uu(is, js, ks+1, 1), &
+                         !ww(is, js, ks, 1), ww(is+1, js, ks, 1)
+                    !gi(n) = gi(n) + 10 * 0.5 * (uu(is, js, ks, 1) + uu(is, js, ks+1, 1)) / tfac(n)
+                    !gk(n) = gk(n) - 10 * 0.5 * (ww(is, js, ks, 1) + ww(is+1, js, ks, 1)) / tfac(n)
+                   ! v(n) = vv(is, js-1, ks, 1) + &
+                        ! (gj(n) - REAL(j0(n)-1, kind=rprec)) * (vv(is, js, ks, 1) - vv(is, js-1, ks, 1))
+
+                    write (lun_standard, *) uu(is, js+1, ks, 1), uu(is, js+1, ks-1, 1), &
+                         ww(is, js+1, ks, 1), ww(is+1, js+1, ks, 1), &
+                         vv(is, js, ks, 1), vv(is, js+1, ks, 1)
+                    gi(n) = gi(n) + age_bump * 0.5 * (uu(is, js+1, ks, 1) + uu(is, js+1, ks-1, 1)) / tfac(n)
+                    gk(n) = gk(n) - age_bump * 0.5 * (ww(is, js+1, ks, 1) + ww(is+1, js+1, ks, 1)) / tfac(n)
+                    v(n) = vv(is, js, ks, 1) + &
+                         (gj(n) - REAL(j0(n), kind=rprec)) * (vv(is, js+1, ks, 1) - vv(is, js, ks, 1))
+                    gj(n) = gj(n) + age_bump * v(n) / tfac(n)
+                    age(n) = age(n) + age_bump
                     IF (gi(n) > int(gi(n))) then
                        i0(n) = int(gi(n)) + 1
                     ELSE
@@ -1337,12 +1342,12 @@ SUBROUTINE trajec_seq()
                     write (lun_standard, *) gi(n), gj(n), gk(n), kk
                     write (lun_standard, *) vv(is, js, ks, 1), vv(is, js, ks+1, 1), &
                          ww(is, js, ks, 1), ww(is, js+1, ks, 1)
-                    gj(n) = gj(n) + 10 * 0.5 * (vv(is, js, ks, 1) + vv(is, js, ks+1, 1)) / tfac(n)
-                    gk(n) = gk(n) - 10 * 0.5 * (ww(is, js, ks, 1) + ww(is, js+1, ks, 1)) / tfac(n)
+                    gj(n) = gj(n) + age_bump * 0.5 * (vv(is, js, ks, 1) + vv(is, js, ks+1, 1)) / tfac(n)
+                    gk(n) = gk(n) - age_bump * 0.5 * (ww(is, js, ks, 1) + ww(is, js+1, ks, 1)) / tfac(n)
                     u(n) = uu(is-1, js, ks, 1) + &
                          (gi(n) - REAL(i0(n)-1, kind=rprec)) * (uu(is, js, ks, 1) - uu(is, js-1, ks, 1))
-                    gi(n) = gi(n) + 10 * u(n) / tfac(n)
-                    age(n) = age(n) + 10
+                    gi(n) = gi(n) + age_bump * u(n) / tfac(n)
+                    age(n) = age(n) + age_bump
                     IF (gj(n) > int(gj(n))) then
                        j0(n) = int(gj(n)) + 1
                     ELSE
@@ -1356,13 +1361,13 @@ SUBROUTINE trajec_seq()
                  ELSEIF ( abs(gi(n) - nint(gi(n))) < tol .and. abs(gj(n) - nint(gj(n))) < tol .and. &
                       abs(gk(n) - nint(gk(n))) < tol ) then
                     write (lun_standard, *) 'Corner Problem', n
-                    gi(n) = gi(n) + 10 * 0.25 * (uu(is, js, ks, 1) + uu(is, js+1, ks, 1) + &
+                    gi(n) = gi(n) + age_bump * 0.25 * (uu(is, js, ks, 1) + uu(is, js+1, ks, 1) + &
                          uu(is, js, ks+1, 1) + uu(is, js+1, ks+1, 1)) / tfac(n)
-                    gj(n) = gj(n) + 10 * 0.25 * (vv(is, js, ks, 1) + vv(is+1, js, ks, 1) + &
+                    gj(n) = gj(n) + age_bump * 0.25 * (vv(is, js, ks, 1) + vv(is+1, js, ks, 1) + &
                          vv(is, js, ks+1, 1) + vv(is+1, js, ks+1, 1)) / tfac(n)
-                    gk(n) = gk(n) - 10 * 0.25 * (ww(is, js, ks, 1) + ww(is, js+1, ks, 1) + &
+                    gk(n) = gk(n) - age_bump * 0.25 * (ww(is, js, ks, 1) + ww(is, js+1, ks, 1) + &
                          ww(is+1, js, ks, 1) + ww(is+1, js+1, ks, 1)) / tfac(n)
-                    age(n) = age(n) + 10
+                    age(n) = age(n) + age_bump
                     write (lun_standard, *) 'Move to ', gi(n), gj(n), gk(n)
                     IF (gi(n) > int(gi(n))) then
                        i0(n) = int(gi(n)) + 1
