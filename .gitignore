@@ -150,6 +150,7 @@ cython_debug/
 *jpeg
 *.index
 *.tar
+*.p
 
 #don't want any of the Ocean Parcels or Ariane Results files (bot temp and final) uploaded
 out*
