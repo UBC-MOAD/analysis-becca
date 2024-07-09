@@ -58,19 +58,12 @@ if org == 'onc':
     'scalar_1213768', 'scalar_1195410', 'scalar_1197448', 'scalar_1201585', 'scalar_1209616', 'scalar_1212055', 'scalar_1215309', 'scalar_117767', 'scalar_118870', 'scalar_1210082',
     'scalar_117498']
 
-    d = { "time (UTC)": np.array([]),
-          "salinity (1e-3)": np.array([]),
-          "temperature (K)": np.array([]),
-          "pressure (dbar)": np.array([]),
-          "longitude (degrees_east)": np.array([]),
-          "latitude (degrees_north)": np.array([]),
-          "depth (m)": np.array([])}
-    df = pd.DataFrame(d)
-    df.set_index('time (UTC)',inplace=True)
-    df_TP = df
-    df_tp = df
+    df = pd.DataFrame()
+    # df.set_index('time (UTC)',inplace=True)
+    df_T = df
+    df_t = df
 
-    # upper case T and P
+    # upper case T
     for id in IDs:
         print(f"Processing ID: {id}")
         e = ERDDAP(
@@ -87,16 +80,13 @@ if org == 'onc':
 
             # Initialize variable names
             temperature_name = None
-            pressure_name = None
             
             # Search through metadata to check for correct variable names for temperature and salinity
             for var in metadata:
                 if 'Temperature' in var:
                     temperature_name = var
-                if 'Pressure' in var:
-                    pressure_name = var
 
-            if not temperature_name or not pressure_name:
+            if not temperature_name:
                 print(f"Required variables missing in dataset {id}, skipping...")
                 continue
 
@@ -104,7 +94,6 @@ if org == 'onc':
                 "time",
                 "salinity",
                 "Temperature",
-                "Pressure",
                 "longitude",
                 "latitude",
                 "depth"
@@ -112,17 +101,24 @@ if org == 'onc':
 
             # Download the data
             d = e.to_pandas()
-            d.rename(columns={temperature_name: 'temperature (K)', pressure_name: 'pressure (dbar)'}, inplace=True)
-            d['temperature (K)'] = pd.to_numeric(d['temperature (K)'], errors='coerce')
-            d['pressure (dbar)'] = pd.to_numeric(d['pressure (dbar)'], errors='coerce')
+            d['Temperature (K)'] = pd.to_numeric(d['Temperature (K)'], errors='coerce')
+            d['salinity (1e-3)'] = pd.to_numeric(d['salinity (1e-3)'], errors='coerce')
 
-            # resample such that its hourly (time resolution much higher than necessary for our purposes in ONC data)
+            # lets be careful with the resampling since many data points (at different locations) may have been taken in the same hour
             d['time (UTC)'] = pd.to_datetime(d['time (UTC)'])
             d.set_index('time (UTC)',inplace=True)
-            d = d.resample('H').mean()
+            # picking depth ranges we can resample between too
+            df2 = pd.DataFrame()
+            for h in np.arange(0,500,10):
+                df2 = pd.concat([df2,d[(d['depth (m)']>=h)&(d['depth (m)']<(h+10))].groupby(
+                    ['longitude (degrees_east)','latitude (degrees_north)'],as_index=False).resample('D').mean()])
+            df2['time'] = [np.array(df2.index)[i][1] for i in range(len(df2))]
+            df2 = df2.reset_index(drop=True)
+            # make sure at least one observation is present
+            d = df2[(df2['Temperature (K)'].notna())|(df2['salinity (1e-3)'].notna())]
 
             if not d.empty:
-                df_TP = pd.concat([df_TP, d])
+                df_T = pd.concat([df_T, d])
                 print(f"Data added for ID: {id}")
             else:
                 print(f"No data found within constraints for ID: {id}")
@@ -130,7 +126,7 @@ if org == 'onc':
         except Exception as ex:
             print(f"Failed to download data for ID: {id}. Error: {ex}")
 
-    # lower case T and P
+    # lower case T
     for id in IDs:
         print(f"Processing ID: {id}")
         e = ERDDAP(
@@ -147,16 +143,13 @@ if org == 'onc':
 
             # Initialize variable names
             temperature_name = None
-            pressure_name = None
             
             # Search through metadata to check for correct variable names for temperature and salinity
             for var in metadata:
                 if 'temperature' in var:
                     temperature_name = var
-                if 'pressure' in var:
-                    pressure_name = var
 
-            if not temperature_name or not pressure_name:
+            if not temperature_name:
                 print(f"Required variables missing in dataset {id}, skipping...")
                 continue
 
@@ -164,25 +157,33 @@ if org == 'onc':
                 "time",
                 "salinity",
                 "temperature",
-                "pressure",
                 "longitude",
                 "latitude",
                 "depth"
             ]
 
             # Download the data
-            d = e.to_pandas(index_col='time', parse_dates=['time'])
-            print(d.columns)
+            d = e.to_pandas()
+            print('erddap worked')
             d['temperature (K)'] = pd.to_numeric(d['temperature (K)'], errors='coerce')
-            d['pressure (dbar)'] = pd.to_numeric(d['pressure (dbar)'], errors='coerce')
+            d['salinity (1e-3)'] = pd.to_numeric(d['salinity (1e-3)'], errors='coerce')
 
-            # resample such that its hourly (time resolution much higher than necessary for our purposes in ONC data)
+            # lets be careful with the resampling since many data points (at different locations) may have been taken in the same hour
             d['time (UTC)'] = pd.to_datetime(d['time (UTC)'])
             d.set_index('time (UTC)',inplace=True)
-            d = d.resample('H').mean()
+            # picking depth ranges we can resample between too
+            df2 = pd.DataFrame()
+            for h in np.arange(0,500,10):
+                df2 = pd.concat([df2,d[(d['depth (m)']>=h)&(d['depth (m)']<(h+10))].groupby(
+                    ['longitude (degrees_east)','latitude (degrees_north)'],as_index=False).resample('D').mean()])
+            df2['time'] = [np.array(df2.index)[i][1] for i in range(len(df2))]
+            df2 = df2.reset_index(drop=True)
+            # make sure at least one observation is present
+            d = df2[(df2['temperature (K)'].notna())|(df2['salinity (1e-3)'].notna())]
+
 
             if not d.empty:
-                df_tp = pd.concat([df_tp, d])
+                df_t = pd.concat([df_t, d])
                 print(f"Data added for ID: {id}")
             else:
                 print(f"No data found within constraints for ID: {id}")
@@ -192,12 +193,12 @@ if org == 'onc':
 
     # Final DataFrame processing
     print("erddap worked")
-    df = pd.concat[(df_tp, df_TP)]
+    df = pd.concat([df_t, df_T])
     df['datetime'] = np.array(df.index)
     index = pd.Index(range(len(df)))
     df.set_index(index,inplace=True)
 
-    name = 'ONC.p'
+    name = 'observations/ONC.p'
     df.to_pickle(name)
     print('ONC data download and processing complete.')
 
@@ -207,76 +208,102 @@ if org == 'onc':
 #######
 if org == 'ios':
 
-    # first the mooring data
-    df = pd.DataFrame()
-    # download obs from ERDDAP
-    e = ERDDAP(
-    server="https://data.cioospacific.ca/erddap",
-    protocol="tabledap",
-    )
+    # there's a ton of data.. so lets do moorings in 5 year chunks from 2005 to 2025
+    # and profiles in 10 year chunks from 1965 to 2025 
+    times = ['2005-01-01T00:00:00Z','2010-01-01T00:00:00Z','2015-01-01T00:00:00Z','2020-01-01T00:00:00Z','2025-01-01T00:00:00Z']
+    for i in range(len(times)-1):
+        # first the mooring data
+        df = pd.DataFrame()
+        # download obs from ERDDAP
+        e = ERDDAP(
+        server="https://data.cioospacific.ca/erddap",
+        protocol="tabledap",
+        )
 
-    e.response = "nc"
-    e.dataset_id = "IOS_CTD_Moorings"
-    e.constraints = {'depth<=':500} 
+        e.response = "nc"
+        e.dataset_id = "IOS_CTD_Moorings"
+        e.constraints = {'depth<=':500,'time>=': times[i], 'time<': times[i+1]} 
 
-    e.variables = [  
-        "time",
-        "longitude",
-        "latitude",
-        "sea_water_pressure",
-        "depth",
-        "sea_water_temperature",
-        "sea_water_practical_salinity",
-        "DOXYZZ01"
-    ]
+        e.variables = [  
+            "time",
+            "longitude",
+            "latitude",
+            "sea_water_pressure",
+            "depth",
+            "sea_water_temperature",
+            "sea_water_practical_salinity",
+            "DOXYZZ01"
+        ]
 
-    df = e.to_pandas()
-    print('erddap worked')
+        df = e.to_pandas()
+        print('erddap worked')
 
-    # lets be careful with the resampling since many data points (at different locations) may have been taken in the same hour
-    df['time (UTC)'] = pd.to_datetime(df['time (UTC)'])
-    df.set_index('time (UTC)',inplace=True)
-    df = df.groupby(['latitude (degrees_north)', 'longitude (degrees_east)', 'depth (m)']).resample('H').mean()
-    df.reset_index(inplace=True)
+        # lets be careful with the resampling since many data points (at different locations) may have been taken in the same hour
+        df['time (UTC)'] = pd.to_datetime(df['time (UTC)'])
+        df.set_index('time (UTC)',inplace=True)
+        print(len(df))
+        # picking depth ranges we can resample between too
+        df2 = pd.DataFrame()
+        for h in np.arange(0,500,10):
+            df2 = pd.concat([df2,df[(df['depth (m)']>=h)&(df['depth (m)']<(h+10))].groupby(
+                ['longitude (degrees_east)','latitude (degrees_north)'],as_index=False).resample('D').mean()])
+        df2['time'] = [np.array(df2.index)[i][1] for i in range(len(df2))]
+        df2 = df2.reset_index(drop=True)
+        # make sure at least one observation is present
+        df = df2[(df2['sea_water_temperature (degC)'].notna())|(df2['sea_water_practical_salinity (PSS-78)'].notna())|(df2['DOXYZZ01 (mL/L)'].notna())]
 
-    name = 'IOS_ctd_moor.p'
-    df.to_pickle(name)
+        name = 'observations/IOS_ctd_moor_'+times[i][:4]+'.p'
+        df.to_pickle(name)
+        print(name)
 
-    
-    
-    # second, the profile data
-    df = pd.DataFrame()
-    # download obs from ERDDAP
-    e = ERDDAP(
-    server="https://data.cioospacific.ca/erddap",
-    protocol="tabledap",
-    )
+        
+    times = ['1965-01-01T00:00:00Z','1975-01-01T00:00:00Z','1985-01-01T00:00:00Z','1995-01-01T00:00:00Z',
+             '2005-01-01T00:00:00Z','2015-01-01T00:00:00Z','2025-01-01T00:00:00Z']
+    for i in range(len(times)-1): 
+        # second, the profile data
+        df = pd.DataFrame()
+        # download obs from ERDDAP
+        e = ERDDAP(
+        server="https://data.cioospacific.ca/erddap",
+        protocol="tabledap",
+        )
 
-    e.response = "nc"
-    e.dataset_id = "IOS_CTD_Profiles"
-    e.constraints = {'depth<=':500} 
+        e.response = "nc"
+        e.dataset_id = "IOS_CTD_Profiles"
+        e.constraints = {'depth<=':500,'time>=': times[i], 'time<': times[i+1]} 
 
-    e.variables = [  
-        "time",
-        "longitude",
-        "latitude",
-        "sea_water_pressure",
-        "depth",
-        "sea_water_temperature",
-        "sea_water_practical_salinity",
-        "DOXYZZ01"
-    ]
+        e.variables = [  
+            "time",
+            "longitude",
+            "latitude",
+            "sea_water_pressure",
+            "depth",
+            "sea_water_temperature",
+            "sea_water_practical_salinity",
+            "DOXYZZ01"
+        ]
 
-    df = e.to_pandas()
-    df['time (UTC)'] = pd.to_datetime(df['time (UTC)'])
-    df.set_index('time (UTC)',inplace=True)
-    df = df.groupby(['latitude (degrees_north)', 'longitude (degrees_east)', 'depth (m)']).resample('H').mean()
-    df.reset_index(inplace=True)
+        df = e.to_pandas()
 
-    print('erddap worked')
+        # careful meaning
+        df['time (UTC)'] = pd.to_datetime(df['time (UTC)'])
+        df.set_index('time (UTC)',inplace=True)
+        print(len(df))
+        # picking depth ranges we can resample between too
+        df2 = pd.DataFrame()
+        for h in np.arange(0,500,10):
+            df2 = pd.concat([df2,df[(df['depth (m)']>=h)&(df['depth (m)']<(h+10))].groupby(
+                ['longitude (degrees_east)','latitude (degrees_north)'],as_index=False).resample('D').mean()])
+        df2['time'] = [np.array(df2.index)[i][1] for i in range(len(df2))]
+        df2 = df2.reset_index(drop=True)
+        # make sure at least one observation is present
+        df = df2[(df2['sea_water_temperature (degC)'].notna())|(df2['sea_water_practical_salinity (PSS-78)'].notna())|(df2['DOXYZZ01 (mL/L)'].notna())]
 
-    name = 'IOS_ctd_prof.p'
-    df.to_pickle(name)
+        print('erddap worked')
+
+        name = 'observations/IOS_ctd_prof_'+times[i][:4]+'.p'
+        df.to_pickle(name)
+        print(name)
 
 #######
 # OOI #
@@ -286,14 +313,7 @@ if org == 'ooi':
     #** Nitrate **#
     IDs =['ooi-ce01issm-rid16-07-nutnrb000','ooi-ce04ossm-rid26-07-nutnrb000','ooi-ce02shsm-rid26-07-nutnrb000','ooi-ce06issm-rid16-07-nutnrb000','ooi-ce09ossm-rid26-07-nutnrb000','ooi-ce07shsm-rid26-07-nutnrb000']
 
-    d = {"time (UTC)":np.array([]),
-    "z (m)":np.array([]),
-    "latitude (degrees_north)":np.array([]),
-    "longitude (degrees_east)":np.array([]),
-    "mole_concentration_of_nitrate_in_sea_water (micromol.L-1)":np.array([]),
-    "mole_concentration_of_nitrate_in_sea_water_suna_qc_agg":np.array([])}
-    df = pd.DataFrame(d)
-    df.set_index('time (UTC)',inplace=True)
+    df = pd.DataFrame()
 
     for id in IDs:
         e = ERDDAP(
@@ -313,10 +333,13 @@ if org == 'ooi':
         ]
         d = e.to_pandas()
 
-        # convert to hourly here so that data from different locations isn't accidentally grouped
+        # remove rows without observations
+        d = d[(d['mole_concentration_of_nitrate_in_sea_water (micromol.L-1)'].notna())]
+
+        # convert to daily here so that data from different locations isn't accidentally grouped
         d['time (UTC)'] = pd.to_datetime(d['time (UTC)'])
         d.set_index('time (UTC)',inplace=True)
-        d = d.resample('h',axis=0).mean()
+        d = d.resample('D',axis=0).mean()
 
         df = pd.concat([df,d])
 
@@ -327,7 +350,7 @@ if org == 'ooi':
     index = pd.Index(range(len(df)))
     df.set_index(index,inplace=True)
 
-    name = 'OOI_nitrate.p'
+    name = 'observations/OOI_nitrate.p'
     df.to_pickle(name)
 
     #** Chlorophyll **#
@@ -335,17 +358,7 @@ if org == 'ooi':
           'ooi-ce06issm-rid16-02-flortd000','ooi-ce06issm-sbd17-06-flortd000','ooi-ce09ossm-rid27-02-flortd000','ooi-ce07shsm-rid27-02-flortd000','ooi-gp03flma-ris01-05-flortd000',
           'ooi-gp03flmb-ris01-05-flortd000','ooi-rs01sbpd-dp01a-04-flntua102']#,'ooi-rs03axps-pc03a-4c-flordd303','ooi-rs01sbps-pc01a-4c-flordd103']
 
-    d = { "time (UTC)":np.array([]),
-    "z (m)":np.array([]),
-    "latitude (degrees_north)":np.array([]),
-    "longitude (degrees_east)":np.array([]),
-    "mass_concentration_of_chlorophyll_a_in_sea_water (microg.L-1)":np.array([]),
-    "sea_water_temperature (degree_Celsius)":np.array([]),
-    "sea_water_practical_salinity (1e-3)":np.array([]),
-    "mass_concentration_of_chlorophyll_a_in_sea_water_qc_agg":np.array([])}
-    df = pd.DataFrame(d)
-    df.set_index('time (UTC)',inplace=True)
-
+    df = pd.DataFrame()
 
     for id in IDs:
         # print(id)
@@ -368,10 +381,13 @@ if org == 'ooi':
         ]
         d = e.to_pandas()
 
+        # remove rows without observations
+        d = d[(d['mass_concentration_of_chlorophyll_a_in_sea_water (microg.L-1)'].notna())]
+
         # convert to hourly here so that data from different locations isn't accidentally grouped
         d['time (UTC)'] = pd.to_datetime(d['time (UTC)'])
         d.set_index('time (UTC)',inplace=True)
-        d = d.resample('h',axis=0).mean()
+        d = d.resample('D',axis=0).mean()
 
         df = pd.concat([df,d])
 
@@ -382,7 +398,7 @@ if org == 'ooi':
     index = pd.Index(range(len(df)))
     df.set_index(index,inplace=True)
 
-    name = 'OOI_chlorophyll.p'
+    name = 'observations/OOI_chlorophyll.p'
     df.to_pickle(name)
 
 
@@ -394,20 +410,10 @@ if org == 'ooi':
     IDs=['ooi-ce01issm-rid16-03-dostad000','ooi-ce01issm-mfd37-03-dostad000','ooi-ce04osbp-lj01c-06-ctdbpo108','ooi-ce04osbp-lj01c-06-dostad108','ooi-ce04osps-pc01b-4a-ctdpfa109','ooi-ce04osps-pc01b-4a-dostad109','ooi-ce04ossm-rid27-04-dostad000','ooi-ce02shbp-lj01d-06-ctdbpn106','ooi-ce02shbp-lj01d-06-dostad106','ooi-ce02shsm-rid27-04-dostad000','ooi-ce06issm-rid16-03-dostad000','ooi-ce06issm-mfd37-03-dostad000','ooi-ce09ossm-rid27-04-dostad000','ooi-ce09ossm-mfd37-03-dostad000','ooi-ce07shsm-rid27-04-dostad000','ooi-ce07shsm-mfd37-03-dostad000','ooi-gp03flma-ris01-03-dostad000','ooi-gp03flmb-ris01-03-dostad000','ooi-rs03ashs-mj03b-10-ctdpfb304','ooi-rs03axpd-dp03a-06-dostad304','ooi-rs03axbs-lj03a-12-ctdpfb301','ooi-rs03axbs-lj03a-12-dostad301','ooi-rs03axps-pc03a-4a-ctdpfa303','ooi-rs03axps-pc03a-4a-dostad303','ooi-rs03ccal-mj03f-12-ctdpfb305','ooi-rs03ecal-mj03e-12-ctdpfb306','ooi-rs01sbpd-dp01a-06-dostad104','ooi-rs01slbs-lj01a-12-ctdpfb101','ooi-rs01slbs-lj01a-12-dostad101','ooi-rs01sbps-pc01a-4a-ctdpfa103','ooi-rs01sbps-pc01a-4a-dostad103']
 
     # Define a base DataFrame to store all the data
-    d = {
-        "time (UTC)": np.array([]),
-        "z (m)": np.array([]),
-        "latitude (degrees_north)": np.array([]),
-        "longitude (degrees_east)": np.array([]),
-        "mole_concentration_of_dissolved_molecular_oxygen_in_sea_water (micromol.L-1)": np.array([]),
-        "mole_concentration_of_dissolved_molecular_oxygen_in_sea_water_qc_agg":np.array([]),
-        "sea_water_temperature (degree_Celsius)": np.array([]),
-        "sea_water_practical_salinity (1e-3)": np.array([])
-    }
-    df = pd.DataFrame(d)
-    df.set_index('time (UTC)',inplace=True)
+    df = pd.DataFrame()
     df_moor = df
     df_prof = df
+    df_prof2 = df
 
     ## Mooring data first
     for id in IDs:
@@ -454,10 +460,13 @@ if org == 'ooi':
             # Download the data
             d = e.to_pandas()
 
-            # convert to hourly here so that data from different locations isn't accidentally grouped
+            # remove rows without observations
+            d = d[(d['mole_concentration_of_dissolved_molecular_oxygen_in_sea_water (micromol.L-1)'].notna())]
+
+            # convert to daily here so that data from different locations isn't accidentally grouped
             d['time (UTC)'] = pd.to_datetime(d['time (UTC)'])
             d.set_index('time (UTC)',inplace=True)
-            d = d.resample('h',axis=0).mean()
+            d = d.resample('D',axis=0).mean()
 
             # Check and convert data types
             d['sea_water_temperature (degree_Celsius)'] = pd.to_numeric(d['sea_water_temperature (degree_Celsius)'], errors='coerce')
@@ -515,15 +524,31 @@ if org == 'ooi':
             
             # Download the data
             d = e.to_pandas()
+            print('erddap worked')
+
+            # remove rows without observations
+            d = d[(d['mole_concentration_of_dissolved_molecular_oxygen_in_sea_water (micromol.L-1)'].notna())]
 
             # convert to hourly here so that data from different locations isn't accidentally grouped
             d['time (UTC)'] = pd.to_datetime(d['time (UTC)'])
             d.set_index('time (UTC)',inplace=True)
-            d = d.resample('h',axis=0).mean()
-
+            
             # Check and convert data types
             d['sea_water_temperature_profiler_depth_enabled (degree_Celsius)'] = pd.to_numeric(d['sea_water_temperature_profiler_depth_enabled (degree_Celsius)'], errors='coerce')
             d['sea_water_practical_salinity_profiler_depth_enabled (1e-3)'] = pd.to_numeric(d['sea_water_practical_salinity_profiler_depth_enabled (1e-3)'], errors='coerce')
+
+            
+
+            # lets be careful with the resampling becasue profiles span many depths
+            d['time (UTC)'] = pd.to_datetime(d['time (UTC)'])
+            d.set_index('time (UTC)',inplace=True)
+            df2 = pd.DataFrame()
+            for h in np.arange(0,500,10):
+                df2 = pd.concat([df2,d[(d['z (m)']>=h)&(d['z (m)']<(h+10))].groupby(
+                    ['longitude (degrees_east)','latitude (degrees_north)'],as_index=False).resample('D').mean()])
+            df2['time'] = [np.array(df2.index)[i][1] for i in range(len(df2))]
+            d = df2.reset_index(drop=True)
+
             d.rename(columns={'sea_water_temperature_profiler_depth_enabled (degree_Celsius)': 'sea_water_temperature (degree_Celsius)', 'sea_water_practical_salinity_profiler_depth_enabled (1e-3)': 'sea_water_practical_salinity (1e-3)'}, inplace=True)
 
             df_prof = pd.concat([df_prof, d])
@@ -531,29 +556,101 @@ if org == 'ooi':
         except Exception as ex:
             print(f"Failed to download data for ID: {id}. Error: {ex}")
 
+    IDs = ['ooi-ce01issp-sp001-02-dostaj000','ooi-ce04ospd-dp01b-06-dostad105','ooi-ce02shsp-sp001-01-dostaj000','ooi-ce02shsp-sp002-01-dostaj000','ooi-ce06issp-sp001-02-dostaj000','ooi-ce07shsp-sp001-01-dostaj000','ooi-cp01cnsp-sp001-06-dostaj000','ooi-cp03issp-sp001-06-dostaj000','ooi-ga02hypm-wfp03-03-dostal000','ooi-gi02hypm-wfp02-03-dostal000','ooi-gs02hypm-wfp03-03-dostal000','ooi-gs02hypm-wfp02-03-dostal000','ooi-gp02hypm-wfp03-03-dostal000','ooi-gp02hypm-wfp02-03-dostal000','ooi-rs03axpd-dp03a-06-dostad304','ooi-rs01sbpd-dp01a-06-dostad104']
+    # and the other profile data
+    for id in IDs:
+        print(f"Processing ID: {id}")
+        e = ERDDAP(
+            server="http://erddap.dataexplorer.oceanobservatories.org/erddap",
+            protocol="tabledap"
+        )
+
+        e.response = "nc"
+        e.dataset_id = id
+        e.constraints = None
+
+        try:
+            # Retrieve metadata for variables that have a standard_name attribute
+            metadata = e.get_var_by_attr(dataset_id=id, standard_name=lambda v: v is not None)
+
+            # Initialize variable names
+            temperature_name = None
+            sainity_name = None
+            
+            # Search through metadata to check for correct variable names for temperature and salinity
+            for var in metadata:
+                if 'sea_water_temperature_profiler_depth_enabled' in var:
+                    temperature_name = var
+                if 'sea_water_practical_salinity_profiler_depth_enabled' in var:
+                    salinity_name = var
+
+            if not temperature_name or not salinity_name:
+                print(f"Required variables missing in dataset {id}, skipping...")
+                continue
+
+            # Attempt to fetch variable metadata
+            # Configure variables for download
+            e.variables = [
+                "time",
+                "z",
+                "latitude",
+                "longitude",
+                'mole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled',
+                'mole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled_qc_agg',
+                'sea_water_temperature_profiler_depth_enabled',
+                'sea_water_practical_salinity_profiler_depth_enabled'
+            ]
+            
+            # Download the data
+            d = e.to_pandas()
+            print('erddap worked')
+
+            # remove rows without observations
+            d = d[(d['mole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled (micromol.L-1)'].notna())]
+
+            # convert to hourly here so that data from different locations isn't accidentally grouped
+            d['time (UTC)'] = pd.to_datetime(d['time (UTC)'])
+            d.set_index('time (UTC)',inplace=True)
+            
+            # Check and convert data types
+            d['sea_water_temperature_profiler_depth_enabled (degree_Celsius)'] = pd.to_numeric(d['sea_water_temperature_profiler_depth_enabled (degree_Celsius)'], errors='coerce')
+            d['sea_water_practical_salinity_profiler_depth_enabled (1e-3)'] = pd.to_numeric(d['sea_water_practical_salinity_profiler_depth_enabled (1e-3)'], errors='coerce')
+            d['mole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled (micromol.L-1)'] = pd.to_numeric(d['mole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled (micromol.L-1)'], errors='coerce')
+
+
+            # lets be careful with the resampling becasue profiles span many depths
+            d['time (UTC)'] = pd.to_datetime(d['time (UTC)'])
+            d.set_index('time (UTC)',inplace=True)
+            df2 = pd.DataFrame()
+            for h in np.arange(0,500,10):
+                df2 = pd.concat([df2,d[(d['z (m)']>=h)&(d['z (m)']<(h+10))].groupby(
+                    ['longitude (degrees_east)','latitude (degrees_north)'],as_index=False).resample('D').mean()])
+            df2['time'] = [np.array(df2.index)[i][1] for i in range(len(df2))]
+            d = df2.reset_index(drop=True)
+
+            d.rename(columns={'sea_water_temperature_profiler_depth_enabled (degree_Celsius)': 'sea_water_temperature (degree_Celsius)', 'sea_water_practical_salinity_profiler_depth_enabled (1e-3)': 'sea_water_practical_salinity (1e-3)'}, inplace=True)
+
+            df_prof2 = pd.concat([df_prof2, d])
+        
+        except Exception as ex:
+            print(f"Failed to download data for ID: {id}. Error: {ex}")
+
     print('oxygen erddap worked')
-    df = pd.concat([df_moor, df_prof])
+    df = pd.concat([df_moor, df_prof, df_prof2])
     
     # reset index
     df['datetime'] = np.array(df.index)
     index = pd.Index(range(len(df)))
     df.set_index(index,inplace=True)
 
-    name = 'OOI_oxygen.p'
+    name = 'observations/OOI_oxygen.p'
     df.to_pickle(name)
 
 
     #** Carbon Dioxide **# 
     IDs=['ooi-ce01issm-rid16-05-pco2wb000', 'ooi-ce01issm-mfd35-05-pco2wb000', 'ooi-ce04osbp-lj01c-09-pco2wb104', 'ooi-ce04osps-pc01b-4d-pco2wa105', 'ooi-ce02shbp-lj01d-09-pco2wb103', 'ooi-ce06issm-rid16-05-pco2wb000', 'ooi-ce06issm-mfd35-05-pco2wb000', 'ooi-ce09ossm-mfd35-05-pco2wb000', 'ooi-ce07shsm-mfd35-05-pco2wb000']
 
-    d = { "time (UTC)":np.array([]),
-    "z (m)":np.array([]),
-    "latitude (degrees_north)":np.array([]),
-    "longitude (degrees_east)":np.array([]),
-    "partial_pressure_of_carbon_dioxide_in_sea_water (microatm)":np.array([]),
-    "partial_pressure_of_carbon_dioxide_in_sea_water_qc_agg":np.array([])}
-    df = pd.DataFrame(d)
-    df.set_index('time (UTC)',inplace=True)
+    df = pd.DataFrame()
 
     for id in IDs:
         e = ERDDAP(
@@ -573,6 +670,9 @@ if org == 'ooi':
         ]
         d = e.to_pandas()
 
+        # remove rows without observations
+        d = d[(d['partial_pressure_of_carbon_dioxide_in_sea_water (microatm)'].notna())]
+
         # convert to hourly here so that data from different locations isn't accidentally grouped
         d['time (UTC)'] = pd.to_datetime(d['time (UTC)'])
         d.set_index('time (UTC)',inplace=True)
@@ -587,5 +687,5 @@ if org == 'ooi':
     index = pd.Index(range(len(df)))
     df.set_index(index,inplace=True)
 
-    name = 'OOI_co2.p'
+    name = 'observations/OOI_co2.p'
     df.to_pickle(name)
