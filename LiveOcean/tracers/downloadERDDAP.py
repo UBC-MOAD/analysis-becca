@@ -206,63 +206,63 @@ if org == 'onc':
 #######
 if org == 'ios':
 
-    #there's a ton of data.. so lets do moorings in 5 year chunks from 2005 to 2025
+    # there's a ton of data.. so lets do moorings in 5 year chunks from 2005 to 2025
     # and profiles in 10 year chunks from 1965 to 2025 
-    # times = ['2005-01-01T00:00:00Z','2010-01-01T00:00:00Z','2015-01-01T00:00:00Z','2020-01-01T00:00:00Z','2025-01-01T00:00:00Z']
-    # for i in range(len(times)-1):
-    #     # first the mooring data
-    #     df = pd.DataFrame()
-    #     # download obs from ERDDAP
-    #     e = ERDDAP(
-    #     server="https://data.cioospacific.ca/erddap",
-    #     protocol="tabledap",
-    #     )
+    times = ['2005-01-01T00:00:00Z','2010-01-01T00:00:00Z','2015-01-01T00:00:00Z','2020-01-01T00:00:00Z','2025-01-01T00:00:00Z']
+    for i in range(len(times)-1):
+        # first the mooring data
+        df = pd.DataFrame()
+        # download obs from ERDDAP
+        e = ERDDAP(
+        server="https://data.cioospacific.ca/erddap",
+        protocol="tabledap",
+        )
 
-    #     e.response = "nc"
-    #     e.dataset_id = "IOS_CTD_Moorings"
-    #     e.constraints = {'depth<=':500,'time>=': times[i], 'time<': times[i+1]} 
+        e.response = "nc"
+        e.dataset_id = "IOS_CTD_Moorings"
+        e.constraints = {'depth<=':500,'time>=': times[i], 'time<': times[i+1]} 
 
-    #     e.variables = [  
-    #         "time",
-    #         "longitude",
-    #         "latitude",
-    #         "sea_water_pressure",
-    #         "depth",
-    #         "sea_water_temperature",
-    #         "sea_water_practical_salinity",
-    #         "DOXYZZ01"
-    #     ]
+        e.variables = [  
+            "time",
+            "longitude",
+            "latitude",
+            "sea_water_pressure",
+            "depth",
+            "sea_water_temperature",
+            "sea_water_practical_salinity",
+            "DOXYZZ01"
+        ]
 
-    #     df = e.to_pandas()
-    #     print('erddap worked')
+        df = e.to_pandas()
+        print('erddap worked')
 
-    #     # lets be careful with the resampling since many data points (at different locations) may have been taken in the same hour
-    #     df['time (UTC)'] = pd.to_datetime(df['time (UTC)'])
-    #     df.set_index('time (UTC)',inplace=True)
-    #     print(len(df))
-    #     # picking depth ranges we can resample between too
-    #     df2 = pd.DataFrame()
-    #     for h in np.arange(0,500,10):
-    #         df2 = pd.concat([df2,df[(df['depth (m)']>=h)&(df['depth (m)']<(h+10))].groupby(
-    #             ['longitude (degrees_east)','latitude (degrees_north)'],as_index=False).resample('D').mean()])
-    #     df2['time'] = [np.array(df2.index)[i][1] for i in range(len(df2))]
-    #     df2 = df2.reset_index(drop=True)
-    #     # make sure at least one observation is present
-    #     df = df2[(df2['sea_water_temperature (degC)'].notna())|(df2['sea_water_practical_salinity (PSS-78)'].notna())|(df2['DOXYZZ01 (mL/L)'].notna())]
+        # lets be careful with the resampling since many data points (at different locations) may have been taken in the same hour
+        df['time (UTC)'] = pd.to_datetime(df['time (UTC)'])
+        df.set_index('time (UTC)',inplace=True)
+        print(len(df))
+        # picking depth ranges we can resample between too
+        df2 = pd.DataFrame()
+        for h in np.arange(0,500,10):
+            df2 = pd.concat([df2,df[(df['depth (m)']>=h)&(df['depth (m)']<(h+10))].groupby(
+                ['longitude (degrees_east)','latitude (degrees_north)'],as_index=False).resample('D').mean()])
+        df2['time'] = [np.array(df2.index)[i][1] for i in range(len(df2))]
+        df2 = df2.reset_index(drop=True)
+        # make sure at least one observation is present
+        df = df2[(df2['sea_water_temperature (degC)'].notna())|(df2['sea_water_practical_salinity (PSS-78)'].notna())|(df2['DOXYZZ01 (mL/L)'].notna())]
 
-    #     name = 'observations/IOS_ctd_moor_'+times[i][:4]+'.p'
-    #     df.to_pickle(name)
-    #     print(name)
+        name = 'observations/IOS_ctd_moor_'+times[i][:4]+'.p'
+        df.to_pickle(name)
+        print(name)
 
-    ### CTD ###
+    ## CTD ###
     # split profile data into much smaller chunks - 2 yr until 2015, then 1 yr
-    # times = ['1965-01-01T00:00:00Z','1967-01-01T00:00:00Z','1969-01-01T00:00:00Z',
-    #          '1971-01-01T00:00:00Z','1973-01-01T00:00:00Z','1975-01-01T00:00:00Z','1977-01-01T00:00:00Z','1979-01-01T00:00:00Z',
-    #          '1981-01-01T00:00:00Z','1983-01-01T00:00:00Z','1985-01-01T00:00:00Z','1987-01-01T00:00:00Z','1989-01-01T00:00:00Z',
-    #          '1991-01-01T00:00:00Z','1993-01-01T00:00:00Z','1995-01-01T00:00:00Z','1997-01-01T00:00:00Z','1999-01-01T00:00:00Z',
-    #          '2001-01-01T00:00:00Z','2003-01-01T00:00:00Z','2005-01-01T00:00:00Z','2007-01-01T00:00:00Z','2009-01-01T00:00:00Z',
-    #          '2011-01-01T00:00:00Z','2013-01-01T00:00:00Z','2015-01-01T00:00:00Z','2017-01-01T00:00:00Z','2018-01-01T00:00:00Z',
-    #          '2019-01-01T00:00:00Z','2020-01-01T00:00:00Z','2021-01-01T00:00:00Z','2022-01-01T00:00:00Z','2023-01-01T00:00:00Z']
+    times = ['1965-01-01T00:00:00Z','1967-01-01T00:00:00Z','1969-01-01T00:00:00Z',
+             '1971-01-01T00:00:00Z','1973-01-01T00:00:00Z','1975-01-01T00:00:00Z','1977-01-01T00:00:00Z','1979-01-01T00:00:00Z',
+             '1981-01-01T00:00:00Z','1983-01-01T00:00:00Z','1985-01-01T00:00:00Z','1987-01-01T00:00:00Z','1989-01-01T00:00:00Z',
+             '1991-01-01T00:00:00Z','1993-01-01T00:00:00Z','1995-01-01T00:00:00Z','1997-01-01T00:00:00Z','1999-01-01T00:00:00Z',
+             '2001-01-01T00:00:00Z','2003-01-01T00:00:00Z','2005-01-01T00:00:00Z','2007-01-01T00:00:00Z','2009-01-01T00:00:00Z',
+             '2011-01-01T00:00:00Z','2013-01-01T00:00:00Z','2015-01-01T00:00:00Z','2017-01-01T00:00:00Z','2018-01-01T00:00:00Z',
+             '2019-01-01T00:00:00Z','2020-01-01T00:00:00Z','2021-01-01T00:00:00Z','2022-01-01T00:00:00Z','2023-01-01T00:00:00Z']
     times = ['2023-01-01T00:00:00Z','2024-01-01T00:00:00Z']
     for i in range(len(times)-1): 
         # second, the profile data
@@ -310,63 +310,63 @@ if org == 'ios':
         df.to_pickle(name)
         print(name)
         
-    # ### ROSETTE ###
-    # # split profile data into 10 yr chunks
-    # times = ['1930-01-01T00:00:00Z','1940-01-01T00:00:00Z','1950-01-01T00:00:00Z','1960-01-01T00:00:00Z','1970-01-01T00:00:00Z',
-    #          '1980-01-01T00:00:00Z','1990-01-01T00:00:00Z','2000-01-01T00:00:00Z','2010-01-01T00:00:00Z','2020-01-01T00:00:00Z',
-    #          '2030-01-01T00:00:00Z']
+    ### ROSETTE ###
+    # split profile data into 10 yr chunks
+    times = ['1930-01-01T00:00:00Z','1940-01-01T00:00:00Z','1950-01-01T00:00:00Z','1960-01-01T00:00:00Z','1970-01-01T00:00:00Z',
+             '1980-01-01T00:00:00Z','1990-01-01T00:00:00Z','2000-01-01T00:00:00Z','2010-01-01T00:00:00Z','2020-01-01T00:00:00Z',
+             '2030-01-01T00:00:00Z']
     
-    # for i in range(len(times)-1):
-    #     df = pd.DataFrame()
-    #     # download obs from ERDDAP
-    #     e = ERDDAP(
-    #     server="https://data.cioospacific.ca/erddap",
-    #     protocol="tabledap",
-    #     )
+    for i in range(len(times)-1):
+        df = pd.DataFrame()
+        # download obs from ERDDAP
+        e = ERDDAP(
+        server="https://data.cioospacific.ca/erddap",
+        protocol="tabledap",
+        )
 
-    #     e.response = "nc"
-    #     e.dataset_id = "IOS_BOT_Profiles"
-    #     e.constraints = {'depth<=':500,'time>=': times[i], 'time<': times[i+1]} 
+        e.response = "nc"
+        e.dataset_id = "IOS_BOT_Profiles"
+        e.constraints = {'depth<=':500,'time>=': times[i], 'time<': times[i+1]} 
 
-    #     e.variables = [  
-    #         "time",
-    #         "longitude",
-    #         "latitude",
-    #         "sea_water_pressure",
-    #         "depth",
-    #         "sea_water_temperature",
-    #         "sea_water_practical_salinity",
-    #         "DOXYZZ01",
-    #         "DOXMZZ01",
-    #         "NTRZAAZ1",
-    #         "SLCAAAZ1",
-    #         "PHOSAAZ1",
-    #         "CPHLFLP1"
-    #     ]
+        e.variables = [  
+            "time",
+            "longitude",
+            "latitude",
+            "sea_water_pressure",
+            "depth",
+            "sea_water_temperature",
+            "sea_water_practical_salinity",
+            "DOXYZZ01",
+            "DOXMZZ01",
+            "NTRZAAZ1",
+            "SLCAAAZ1",
+            "PHOSAAZ1",
+            "CPHLFLP1"
+        ]
 
-    #     df = e.to_pandas()
+        df = e.to_pandas()
 
-    #     # careful meaning
-    #     df['time (UTC)'] = pd.to_datetime(df['time (UTC)'])
-    #     df.set_index('time (UTC)',inplace=True)
-    #     print(len(df))
-    #     # picking depth ranges we can resample between too
-    #     df2 = pd.DataFrame()
-    #     for h in np.arange(0,500,10):
-    #         df2 = pd.concat([df2,df[(df['depth (m)']>=h)&(df['depth (m)']<(h+10))].groupby(
-    #             ['longitude (degrees_east)','latitude (degrees_north)'],as_index=False).resample('D').mean()])
-    #     df2['time'] = [np.array(df2.index)[i][1] for i in range(len(df2))]
-    #     df2 = df2.reset_index(drop=True)
-    #     # make sure at least one observation is present
-    #     df = df2[(df2['sea_water_temperature (degC)'].notna())|(df2['sea_water_practical_salinity (PSS-78)'].notna())|(df2['DOXYZZ01 (mL/L)'].notna())
-    #              |(df2['DOXMZZ01 (umol/kg)'].notna())|(df2['NTRZAAZ1 (umol/L)'].notna())|(df2['CPHLFLP1 (mg/m^3)'].notna())|(df2['SLCAAAZ1 (umol/L)'].notna())
-    #              |(df2['PHOSAAZ1 (umol/L)'].notna())]
+        # careful meaning
+        df['time (UTC)'] = pd.to_datetime(df['time (UTC)'])
+        df.set_index('time (UTC)',inplace=True)
+        print(len(df))
+        # picking depth ranges we can resample between too
+        df2 = pd.DataFrame()
+        for h in np.arange(0,500,10):
+            df2 = pd.concat([df2,df[(df['depth (m)']>=h)&(df['depth (m)']<(h+10))].groupby(
+                ['longitude (degrees_east)','latitude (degrees_north)'],as_index=False).resample('D').mean()])
+        df2['time'] = [np.array(df2.index)[i][1] for i in range(len(df2))]
+        df2 = df2.reset_index(drop=True)
+        # make sure at least one observation is present
+        df = df2[(df2['sea_water_temperature (degC)'].notna())|(df2['sea_water_practical_salinity (PSS-78)'].notna())|(df2['DOXYZZ01 (mL/L)'].notna())
+                 |(df2['DOXMZZ01 (umol/kg)'].notna())|(df2['NTRZAAZ1 (umol/L)'].notna())|(df2['CPHLFLP1 (mg/m^3)'].notna())|(df2['SLCAAAZ1 (umol/L)'].notna())
+                 |(df2['PHOSAAZ1 (umol/L)'].notna())]
 
-    #     print('erddap worked')
+        print('erddap worked')
 
-    #     name = 'observations/IOS_bot_prof_'+times[i][:4]+'.p'
-    #     df.to_pickle(name)
-    #     print(name)
+        name = 'observations/IOS_bot_prof_'+times[i][:4]+'.p'
+        df.to_pickle(name)
+        print(name)
 
 #######
 # OOI #
