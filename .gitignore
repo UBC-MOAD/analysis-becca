@@ -158,6 +158,8 @@ becca_drifters*
 *_old
 *poo
 
+# bathymetry files
+ne_10m_bathymetry*
 
 #its called maybe delete for a reason
 maybe_delete/
