@@ -32,6 +32,7 @@ dependencies:
   - python=3
   - pytz
   - scipy
+  - statsmodels
   - xarray
   - IPython
   - cartopy
