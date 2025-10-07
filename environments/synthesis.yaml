@@ -1,0 +1,43 @@
+# conda environment description file for the analysis_becca/Synthesis
+#
+# Create a conda environment in which to run Jupyter Notebooks in this directory with:
+#
+#   $ conda env create -f synthesis.yaml
+#   $ conda activate synthesis
+#
+# To add new packages to the environment,
+# add them to the dependencies list below,
+# then update the activated environment with:
+#
+#   (synthesis)$ conda env update -f synthesis.yaml
+
+name: synthesis
+
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - arrow
+  - bottleneck
+  - cmocean
+  - dask
+  - python-dateutil
+  - jupyterlab
+  - matplotlib
+  - netCDF4
+  - numpy
+  - pandas
+  - pip
+  - python=3
+  - pytz
+  - scipy
+  - statsmodels
+  - xarray
+  - IPython
+  - cartopy
+  - scikit-learn
+  - geopandas
+  - gsw
+
+# pip install --user --editable /ocean/rbeutel/MEOPAR/tools/SalishSeaTools
