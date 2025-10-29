@@ -151,6 +151,7 @@ cython_debug/
 *.index
 *.tar
 *.p
+*.shp
 
 #don't want any of the Ocean Parcels or Ariane Results files (bot temp and final) uploaded
 out*
