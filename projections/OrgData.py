@@ -142,5 +142,5 @@ def get_tracers_all(dwend,spend,upend,flend):
     return df
 
 all = get_tracers_all(dwendday,spendday,upendday,flendday)
-all.to_csv('/ocean/rbeutel/MOAD/analysis-becca/projections/combineddata.csv')
+all.to_csv('/ocean/rbeutel/MOAD/analysis-becca/projections/output/combineddata.csv')
 print('done')
