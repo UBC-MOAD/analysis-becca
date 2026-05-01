@@ -1,4 +1,4 @@
-# Alter and save boundary condition files based on southern source water change only
+# Alter and save boundary condition files based on northern and western source water change only
 
 # bring in packages
 import datetime as dt
@@ -77,47 +77,53 @@ for day in dates:
 
     # EDITS
 
-    # for this case we are only changing CUC and south shelf properties
-    south_prof = get_depth_profile(fsouth, date_str)
+    # for this case we are only changing CUC, offshore deep, and north shelf properties
+    north_prof = get_depth_profile(fnorth, date_str)
+    offD_prof = get_depth_profile(foffD, date_str)
     cuc_prof   = get_depth_profile(fcuc, date_str)
 
     # edit temperature
     for k in range(interps["temp"].shape[0]):
         delta = (
-            south_prof[k] * 1.75
-            + cuc_prof[k] * 1.03
+            north_prof[k] * 1.75
+            + offD_prof[k] * 2.05
+            + cuc_prof[k] * (2.05*0.7)
         )
         interps["temp"][k, :, :] += delta
 
     # edit oxygen, remember unit conversion
     for k in range(interps["oxygen"].shape[0]):
         delta = (
-            south_prof[k] * oxygen_mlL_to_uM(-0.28)
-            + cuc_prof[k] * oxygen_mlL_to_uM(-0.3)
+            north_prof[k] * oxygen_mlL_to_uM(-0.28)
+            + offD_prof[k] * oxygen_mlL_to_uM(-0.6)
+            + cuc_prof[k] * oxygen_mlL_to_uM((-0.6*0.7))
         )
         interps["oxygen"][k, :, :] += delta
 
     # edit TA
     for k in range(interps["alkalinity"].shape[0]):
         delta = (
-            south_prof[k] * -4.17
-            + cuc_prof[k] * -0.83
+            north_prof[k] * -4.17
+            + offD_prof[k] * -1.66
+            + cuc_prof[k] * (-1.66*0.7)
         )
         interps["alkalinity"][k, :, :] += delta
 
     # edit DIC
     for k in range(interps["TIC"].shape[0]):
         delta = (
-            south_prof[k] * 5
-            + cuc_prof[k] * 38.83
+            north_prof[k] * 5
+            + offD_prof[k] * 77.66
+            + cuc_prof[k] * (77.66*0.7)
         )
         interps["TIC"][k, :, :] += delta
 
     # edit NO3
     for k in range(interps["NO3"].shape[0]):
         delta = (
-            south_prof[k] * 0.84
-            + cuc_prof[k] * 0.46
+            north_prof[k] * 0.84
+            + offD_prof[k] * 0.91
+            + cuc_prof[k] * (0.91*0.7)
         )
         interps["NO3"][k, :, :] += delta
 
@@ -145,8 +151,8 @@ for day in dates:
     out["TA"][0, :, :, :]       = interps["alkalinity"]
 
     # update metadata
-    out.attrs["history"] = out.attrs.get("history", "") + " | edited for 2100, south source water change only"
+    out.attrs["history"] = out.attrs.get("history", "") + " | edited for 2100, north source water change only"
 
     # save!
-    out.to_netcdf("/ocean/rbeutel/MOAD/analysis-becca/projections/output/bdy_SouthChange/LiveOcean_v201905_y{:%Y}m{:%m}d{:%d}.nc".format(day,day,day))
+    out.to_netcdf("/ocean/rbeutel/MOAD/analysis-becca/projections/output/bdy_NorthWestChange/LiveOcean_v201905_y{:%Y}m{:%m}d{:%d}.nc".format(day,day,day))
     print(date_str)
