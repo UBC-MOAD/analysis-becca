@@ -95,7 +95,7 @@ for day in dates:
     data = xr.open_dataset('/results/forcing/LiveOcean/boundary_conditions/LiveOcean_v201905_y{:%Y}m{:%m}d{:%d}.nc'.format(day,day,day))
 
     # the fraction of change depends on the month we are in
-    frac_change = monthly_factor[day.month - 1]
+    frac_change = monthly_factor[day.month - 1] -1
 
     # build an easily editable tracer dictionary 
     interps = {
