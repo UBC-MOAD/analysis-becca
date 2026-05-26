@@ -85,7 +85,7 @@ for day in dates:
     for k in range(interps["temp"].shape[0]):
         delta = (
             south_prof[k] * 1.75
-            + cuc_prof[k] * 1.03
+            + cuc_prof[k] * 0.61
         )
         interps["temp"][k, :, :] += delta
 
@@ -93,7 +93,7 @@ for day in dates:
     for k in range(interps["oxygen"].shape[0]):
         delta = (
             south_prof[k] * oxygen_mlL_to_uM(-0.28)
-            + cuc_prof[k] * oxygen_mlL_to_uM(-0.3)
+            + cuc_prof[k] * oxygen_mlL_to_uM(-0.18)
         )
         interps["oxygen"][k, :, :] += delta
 
@@ -101,7 +101,7 @@ for day in dates:
     for k in range(interps["alkalinity"].shape[0]):
         delta = (
             south_prof[k] * -4.17
-            + cuc_prof[k] * -0.83
+            + cuc_prof[k] * -0.50
         )
         interps["alkalinity"][k, :, :] += delta
 
@@ -109,7 +109,7 @@ for day in dates:
     for k in range(interps["TIC"].shape[0]):
         delta = (
             south_prof[k] * 5
-            + cuc_prof[k] * 38.83
+            + cuc_prof[k] * 23.30
         )
         interps["TIC"][k, :, :] += delta
 
@@ -117,7 +117,7 @@ for day in dates:
     for k in range(interps["NO3"].shape[0]):
         delta = (
             south_prof[k] * 0.84
-            + cuc_prof[k] * 0.46
+            + cuc_prof[k] * 0.27
         )
         interps["NO3"][k, :, :] += delta
 
