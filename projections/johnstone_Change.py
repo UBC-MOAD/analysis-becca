@@ -347,4 +347,4 @@ out["TA"].values[...]       = df["alkalinity"]
 out.attrs["history"] = out.attrs.get("history", "") + " | edited for 2100"
 
 # save!
-out.to_netcdf("/ocean/rbeutel/MOAD/analysis-becca/projections/output/{}/Johnstone_bdy.nc".format(folder))
+out.to_netcdf("/ocean/rbeutel/MOAD/analysis-becca/projections/output/{}/Johnstone_bdy.nc".format(folder),unlimited_dims=('time_counter'))
