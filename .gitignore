@@ -152,6 +152,7 @@ cython_debug/
 *.tar
 *.p
 *.shp
+*.geojson
 
 #don't want any of the Ocean Parcels or Ariane Results files (bot temp and final) uploaded
 out*
