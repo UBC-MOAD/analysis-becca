@@ -9,7 +9,7 @@ import xarray as xr
 import numpy as np
 import os
 import gsw
-from salishsea_tools.LiveOcean_BCs import convect, stabilize
+from salishsea_tools.LiveOcean_BCs import convect #, stabilize
 
 #############
 # FUNCTIONS #
@@ -34,6 +34,35 @@ def oxygen_mlL_to_uM(oxygen_mlL):
     
     return uM
 
+def stabilize(sigma, interps):
+    """Add a little salt to stabilize marginally
+    stable cells
+    Brought in from salishsea_tools in order to add
+    a bit more salt than the original function
+
+    :arg interps: dictionary of 3D numpy arrays.
+                  Key represents the variable name.
+    :type interps: dictionary
+
+    :arg sigma: sigma-t, density, 3D array
+    :type sigma: numpy array
+
+    :returns interps stabilized
+    """
+
+    small = 0.02  # stabilize for delta sigma less than this
+    kl = 25  # stabilize for low delta sigma higher than this
+    add_salt = 0.02  # add this much salt
+    kmax, imax, jmax = sigma.shape
+    for k in range(kl - 1):
+        for i in range(imax):
+            for j in range(jmax):
+                if sigma[k + 1, i, j] - sigma[k, i, j] < small:
+                    interps["salt"][: k + 1, i, j] += -add_salt / (k + 1)
+                    interps["salt"][k + 1 :, i, j] += add_salt / (kmax - k + 1)
+
+    return interps
+
 
 
 ##########################
@@ -41,8 +70,9 @@ def oxygen_mlL_to_uM(oxygen_mlL):
 ##########################
 
 # want to do this for every day between 2018/01/01 and 2022/12/31
-startday=dt.datetime(2018,1,1) 
-endday=dt.datetime(2022,12,31)
+# note that changed here jsut to do "problem" day
+startday=dt.datetime(2021,2,13) 
+endday=dt.datetime(2021,2,14)
 dates = pd.date_range(start=startday,end=endday, freq="D")
 
 
