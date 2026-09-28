@@ -1,0 +1,31 @@
+dataset:
+  model profile: /ocean/rbeutel/MOAD/analysis-becca/projections/reshaprfiles/model_profile.yaml
+  time base: day
+  variables group: physics
+
+dask cluster: salish_cluster.yaml
+
+start date: 2018-01-01
+end date: 2022-12-31
+
+extract variables:
+  - votemper
+  - vosaline
+
+selection:
+  grid y:
+    y min: 310
+    y max: 360
+  grid x:
+    x min: 50
+    x max: 100
+
+climatology:
+  group by: month
+  aggregation: mean
+
+extracted dataset:
+  name: jdf_physics202111
+  description: Base scenario (202111), JdF region, whole depth, monthly climatology;
+              y=310:360, x=50:100
+  dest dir: /ocean/rbeutel/MOAD/analysis-becca/projections/summary_results

@@ -1,0 +1,30 @@
+dataset:
+  model profile: /ocean/rbeutel/MOAD/analysis-becca/projections/reshaprfiles/model_profile.yaml
+  time base: day
+  variables group: biology
+
+dask cluster: salish_cluster.yaml
+
+start date: 2018-01-01
+end date: 2022-12-31
+
+extract variables:
+  - nitrate
+
+selection:
+  grid y:
+    y min: 80
+    y max: 130
+  grid x:
+    x min: 220
+    x max: 270
+
+climatology:
+  group by: month
+  aggregation: mean
+
+extracted dataset:
+  name: pug_biology202111
+  description: Base scenario (202111), Pug region, whole depth, monthly climatology;
+              y=80:130, x=220:270
+  dest dir: /ocean/rbeutel/MOAD/analysis-becca/projections/summary_results
