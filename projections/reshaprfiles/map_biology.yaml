@@ -11,17 +11,17 @@ end date: 2022-12-31
 extract variables:
   - nitrate
 
-selection:
-  depth:
-    # NOTE: use depth level numbers, not depths in meters
-    depth min: 23
-    depth max: 24
+# selection:
+#   depth:
+#     # NOTE: use depth level numbers, not depths in meters
+#     depth min: 23
+#     depth max: 24
 
 resample:
-  time interval: 1MS # 1 month, date is start of month
+  time interval: 12M # 1 month, date is start of month
   aggregation: mean
 
 extracted dataset:
-  name: map_biology202111
-  description: Base scenario (202111), ~50 m depth over the entire model; deptht=23:24
+  name: forthalweg_biology202111
+  description: Base scenario (202111),  over the entire model for thalweg plot generation and map drawing at different depths
   dest dir: /ocean/rbeutel/MOAD/analysis-becca/projections/summary_results
