@@ -19,10 +19,10 @@ extract variables:
 #     depth max: 24
 
 resample:
-  time interval: 12M # 1 month, date is start of month (60M for full year)
+  time interval: 1M # 1 month, date is start of month (60M for full year)
   aggregation: mean
 
 extracted dataset:
-  name: forthalweg_physics202111
+  name: forthalweg_monthly_physics202111
   description: Base scenario (202111), over the entire model for thalweg plot generation and map drawing at different depths
   dest dir: /ocean/rbeutel/MOAD/analysis-becca/projections/summary_results
