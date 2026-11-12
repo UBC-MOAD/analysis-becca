@@ -10,6 +10,8 @@ end date: 2022-12-31
 
 extract variables:
   - nitrate
+  - diatoms
+  - flagellates
 
 selection:
   grid y:
